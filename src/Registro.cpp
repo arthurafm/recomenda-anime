@@ -160,7 +160,7 @@ Anime::~Anime(){
 
 }
 
-std::int Anime::getID(){
+int Anime::getID(){
     return id;
 }
 
