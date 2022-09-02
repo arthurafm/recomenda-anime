@@ -46,7 +46,7 @@ class Anime{
         int getScore2();
         int getScore1();
 
-        void printaRegistro();
+        void printaAnime();
 
     private:
 
@@ -84,6 +84,42 @@ class Anime{
         int score3;
         int score2;
         int score1;
+
+};
+
+class Manga{
+    public:
+
+        Manga(std::string linha);
+        ~Manga();
+
+        std::string getTitle();
+        int getID();
+        std::string getType();
+        int getChapters();
+        int getVolumes();
+        std::string getStatus();
+        std::string getGenres();
+        float getScore();
+        int getRanked();
+        std::string getAuthor();
+        std::string getSerializations();
+
+        void printaManga();
+
+    private:
+
+        std::string title;
+        int id;
+        std::string type;
+        int chapters;
+        int volumes;
+        std::string status;
+        std::string genres;
+        float score;
+        int ranked;
+        std::string author;
+        std::string serializations;
 
 };
 
