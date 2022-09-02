@@ -5,11 +5,11 @@
 #include <vector>
 #include <ostream>
 
-class Registro{
+class Anime{
     public:
 
-        Registro(std::string linha);
-        ~Registro();
+        Anime(std::string linha);
+        ~Anime();
 
         int getID();
         std::string getName();
