@@ -155,8 +155,57 @@ Anime::Anime(std::string linha){
     }
 }
 
-// Deconstrutor
+// Construtor classe de Mangas
+Manga::Manga(std::string linha){
+    std::vector<std::string> row;
+    std::string word;
+
+    // Leitura de linhas, separando atributos
+    std::istringstream iss(linha);
+    while(getline(iss, word, ',')){
+        row.push_back(word);
+    }
+    // Set de atributos
+    title = row[0];
+    id = std::stoi(row[1]);
+    type = row[2];
+    if (row[3] == ""){
+        chapters = -1;
+    }
+    else{
+        chapters = std::stoi(row[3]);
+    }
+    if (row[4] == ""){
+        volumes = -1;
+    }
+    else{
+        volumes = std::stoi(row[4]);
+    }
+    status = row[5];
+    genres = row[6];
+    if (row[7] == ""){
+        score = -1;
+    }
+    else{
+        score = std::stof(row[7]);
+    }
+    if (row[8] == ""){
+        ranked = -1;
+    }
+    else{
+        ranked = std::stof(row[8]);
+    }
+    author = row[9];
+    serializations = row[10];
+}
+
+// Deconstrutor de classe Anime
 Anime::~Anime(){
+
+}
+
+// Desconstrutor de classe Manga
+Manga::~Manga(){
 
 }
 
