@@ -160,6 +160,10 @@ Anime::~Anime(){
 
 }
 
+std::int Anime::getID(){
+    return id;
+}
+
 std::string Anime::getName()
 {
     return name;
@@ -323,4 +327,48 @@ int Anime::getScore2()
 int Anime::getScore1()
 {
     return score1;
+}
+
+std::string Manga::getTitle(){
+    return title;
+}
+
+int Manga::getID(){
+    return id;
+}
+
+std::string Manga::getType(){
+    return type;
+}
+
+int Manga::getChapters(){
+    return chapters;
+}
+
+int Manga::getVolumes(){
+    return volumes;
+}
+
+std::string Manga::getStatus(){
+    return status;
+}
+
+std::string Manga::getGenres(){
+    return genres;
+}
+
+float Manga::getScore(){
+    return score;
+}
+
+int Manga::getRanked(){
+    return ranked;
+}
+
+std::string Manga::getAuthor(){
+    return author;
+}
+
+std::string Manga::getSerializations(){
+    return serializations;
 }
