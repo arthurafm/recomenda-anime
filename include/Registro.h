@@ -9,6 +9,7 @@ class Anime{
     public:
 
         Anime(std::string linha);
+        Anime();
         ~Anime();
 
         int getID();
@@ -91,6 +92,7 @@ class Manga{
     public:
 
         Manga(std::string linha);
+        Manga();
         ~Manga();
 
         std::string getTitle();

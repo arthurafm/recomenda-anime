@@ -1,28 +1,44 @@
 #include <iostream>
 #include <fstream>
-#include "include/Registro.h"
+#include "include\Registro.h"
+#include "include\Arquivos.h"
 
 int main()
 {
-     // Buffers de leitura de linha
-    std::ifstream entrada_anime("anime.csv");
-    std::ifstream entrada_manga("manga.csv");
-    std::string linha;
 
-    std::vector<Anime> dados_entrada_anime; // Declaracao do vetor de registros que contem a database
-    std::vector<Manga> dados_entrada_manga;
+    /* 3. Realizar a coleta e a persistência de dados de maneira incremental, o programa deve manter os dados nos arquivos e, ao carregar, o programa deve ler os
+          dados processados anteriormente. Se novos dados forem processados, eles devem ser adicionados aos já existentes. */
+    if((ArquivoExiste("bin_anime.bin") == -1) && (ArquivoExiste("bin_manga.bin") == -1)){
 
-    // Leitura do arquivo
-    while(std::getline(entrada_anime, linha)){ // Pega linha do arquivo
-        Anime reg1(linha); // Cria registro com dados da linha
-        dados_entrada_anime.push_back(reg1); // Insere novo registro no vetor de registros
+        /* 1. Processar dados brutos provenientes da Web ou a partir de arquivos locais, do tipo TXT, CSV, HTML ou XML, os quais serão a fonte de dados inicial;
+              O programa deve importar múltiplos documentos de entrada.*/
+        ProcessaArquivoCSV();
     }
-    while(std::getline(entrada_manga, linha)){
-        Manga reg2(linha);
-        dados_entrada_manga.push_back(reg2);
-    }
-    std::cout << dados_entrada_manga[0].getTitle() << std::endl;
-    std::cout << dados_entrada_manga[0].getRanked() << std::endl;
-    std::cout << dados_entrada_manga[0].getGenres() << std::endl;
+    int op_code;
+    do{
+        std::cout << "Selecione a operacao desejada:" << std::endl << "1- Recomendar" << std::endl << "2- Buscar" << std::endl << "3- Adicionar" << std::endl << "4- Excluir"
+        << std::endl << "5- Classificar ordenado" << std::endl << "6- Classificar inverso" << std::endl << "0- Sair" << std::endl;
+        std::cin >> op_code;
+        switch(op_code){
+            case 1:
+                break;
+            case 2:
+                break;
+            case 3:
+                break;
+            case 4:
+                break;
+            case 5:
+                break;
+            case 6:
+                break;
+            case 0:
+                op_code = 0;
+                break;
+            default:
+                std::cout << "Operacao invalida." << std::endl;
+                break;
+        }
+    }while(op_code != 0);
     return 0;
 }

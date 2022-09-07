@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "../include/Registro.h"
+#include "..\include\Registro.h"
 
 // Construtor classe de Animes
 Anime::Anime(std::string linha){
@@ -155,6 +155,11 @@ Anime::Anime(std::string linha){
     }
 }
 
+// Construtor para leitura de arquivos
+Anime::Anime(){
+
+}
+
 // Construtor classe de Mangas
 Manga::Manga(std::string linha){
     std::vector<std::string> row;
@@ -197,6 +202,11 @@ Manga::Manga(std::string linha){
     }
     author = row[9];
     serializations = row[10];
+}
+
+// Construtor para leitura de arquivos
+Manga::Manga(){
+
 }
 
 // Deconstrutor de classe Anime
