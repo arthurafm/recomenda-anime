@@ -157,7 +157,7 @@ void BPTree::insereBPTree(int chave, int indice){
             while((chave > nodoVirtual[i].first) && (i < MAX)){
                 i++;
             }
-            for(int j = (MAX + 1); j > i; j--){ // De alguma forma, modifica o n_folha e quebra o programa
+            for(int j = (MAX + 1); j > i; j--){ // De alguma forma, modifica o n_folha pra NULL e quebra o programa
                 nodoVirtual[j] = nodoVirtual[j - 1];
             }
             nodoVirtual[i].first = chave;
