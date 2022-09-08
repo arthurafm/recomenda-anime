@@ -8,10 +8,10 @@ int main()
 
     /* 3. Realizar a coleta e a persistência de dados de maneira incremental, o programa deve manter os dados nos arquivos e, ao carregar, o programa deve ler os
           dados processados anteriormente. Se novos dados forem processados, eles devem ser adicionados aos já existentes. */
-    if((ArquivoExiste("bin_anime.bin") == -1) && (ArquivoExiste("bin_manga.bin") == -1)){
+    if((ArquivoExiste("anime.bin") == -1) && (ArquivoExiste("manga.bin") == -1)){
 
-        /* 1. Processar dados brutos provenientes da Web ou a partir de arquivos locais, do tipo TXT, CSV, HTML ou XML, os quais serão a fonte de dados inicial;
-              O programa deve importar múltiplos documentos de entrada.*/
+    /* 1. Processar dados brutos provenientes da Web ou a partir de arquivos locais, do tipo TXT, CSV, HTML ou XML, os quais serão a fonte de dados inicial;
+          O programa deve importar múltiplos documentos de entrada. */
         ProcessaArquivoCSV();
     }
     int op_code;
@@ -40,5 +40,6 @@ int main()
                 break;
         }
     }while(op_code != 0);
+
     return 0;
 }

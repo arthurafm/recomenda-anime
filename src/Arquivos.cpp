@@ -3,6 +3,16 @@
 #include <fstream>
 #include "..\include\Registro.h"
 
+// Função para abrir arquivos pela stdio.h
+short AbreArquivo(FILE **arq, char *nome_arq, char *modo){
+    *arq = fopen(nome_arq, modo);
+    if(*arq == NULL){
+        return 0;
+    }
+    else{
+        return 1;
+    }
+}
 
 // Função para saber se o arquivo existe ou não
 short ArquivoExiste(std::string name){
@@ -41,10 +51,19 @@ void ProcessaArquivoCSV(){
           Tais arquivos poderão ser organizados tanto de forma sequencial, quanto serial. Porém é obrigatório que sejam implementados índices de acesso que auxiliem
           na consulta a esses dados. */
 
+    // Criação das árvores B+
+    BPTree bpt_anime, bpt_manga;
+    for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
+        bpt_anime.insereBPTree(dados_entrada_anime[i].getID(), i);
+    }
+    for(unsigned int i = 0; i < dados_entrada_manga.size(); i++){
+        bpt_manga.insereBPTree(dados_entrada_manga[i].getID(), i);
+    }
+
     // Manipulação de arquivos binários
     std::ofstream bin_anime, bin_manga;
-    bin_anime.open("bin_anime.bin", std::ios::binary);
-    bin_manga.open("bin_manga.bin", std::ios::binary);
+    bin_anime.open("anime.bin", std::ios::binary);
+    bin_manga.open("manga.bin", std::ios::binary);
     for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
         bin_anime.write(reinterpret_cast<char *>(&(dados_entrada_anime[i])), sizeof(dados_entrada_anime[i]));
     }
@@ -53,6 +72,15 @@ void ProcessaArquivoCSV(){
     }
     bin_anime.close();
     bin_manga.close();
+
+    char bpt_anime_arq[] = "bpt_anime.bin", bpt_manga_arq[] = "bpt_manga.bin", write[] = "w";
+    FILE *bin_bpt_anime = NULL, *bin_bpt_manga;
+    AbreArquivo(&bin_bpt_anime, bpt_anime_arq, write);
+    bpt_anime.armazenaBPTree(bpt_anime.getRaiz(), bin_bpt_anime);
+    fclose(bin_bpt_anime);
+    AbreArquivo(&bin_bpt_manga, bpt_manga_arq, write);
+    bpt_manga.armazenaBPTree(bpt_manga.getRaiz(), bin_bpt_manga);
+    fclose(bin_bpt_manga);
 }
 
 // Construtor para nodos da árvore B+ Tree
@@ -60,18 +88,6 @@ Nodo::Nodo(){
     chaves = new int[MAX];
     index = new int[MAX];
     pChaves = new Nodo *[MAX + 1];
-}
-
-int Nodo::getNumChaves(){
-    return numChaves;
-}
-
-int Nodo::getChaves(int i){
-    return chaves[i];
-}
-
-int Nodo::getIndex(int i){
-    return index[i];
 }
 
 // Construtor para a árvore B+ Tree
@@ -287,6 +303,7 @@ Nodo *BPTree::achaPai(Nodo *cursor, Nodo *filho){
   return pai;
 }
 
+// Remove na árvore B+
 void BPTree::removeBPTree(int chave){
     if(raiz == NULL){
         return;
@@ -411,6 +428,7 @@ void BPTree::removeBPTree(int chave){
     }
 }
 
+// Função recursiva auxiliar de remoção
 void BPTree::removeInterno(int chave, Nodo *cursor, Nodo *filho){
     if(cursor == raiz){
         if(cursor->numChaves == 1){
@@ -561,4 +579,17 @@ Nodo *BPTree::getRaiz(){
     return raiz;
 }
 
-
+// Função para armazenar árvore B+ em binário
+void BPTree::armazenaBPTree(Nodo *cursor, FILE* arq){
+    if(cursor != NULL){
+        for(int i = 0; i < cursor->numChaves; i++){
+            fwrite(&(cursor->chaves[i]), sizeof(int), 1, arq);
+            fwrite(&(cursor->index[i]), sizeof(int), 1, arq);
+        }
+        if(cursor->ehFolha != true){
+            for(int i = 0; i < (cursor->numChaves + 1); i++){
+                armazenaBPTree(cursor->pChaves[i], arq);
+            }
+        }
+    }
+}
