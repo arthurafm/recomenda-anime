@@ -5,6 +5,7 @@
 #include <vector>
 #include <ostream>
 
+// Registro de anime
 class Anime{
     public:
 
@@ -88,6 +89,7 @@ class Anime{
 
 };
 
+// Registro de manga
 class Manga{
     public:
 
