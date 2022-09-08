@@ -593,3 +593,241 @@ void BPTree::armazenaBPTree(Nodo *cursor, FILE* arq){
         }
     }
 }
+
+NodoTrie* cria_NodoTrie(char caracter) {
+    // Aloca memoria para um NodoTrie
+    NodoTrie* nodo = (NodoTrie*) calloc (1, sizeof(NodoTrie));
+    for (int i=0; i<NTRIE; i++)
+        nodo->filhos[i] = NULL;
+    nodo->eh_folha = 0;
+    nodo->caracter = caracter;
+    nodo->indexanime = -1;
+    nodo->indexmanga = -1;
+    return nodo;
+}
+
+void free_NodoTrie(NodoTrie* nodo) {
+    // Desaloca  a memoria ocupada pelo nodo e todos os seus filhos
+    for(int i=0; i<NTRIE; i++) {
+        if (nodo->filhos[i] != NULL) {
+            free_NodoTrie(nodo->filhos[i]);
+        }
+    }
+    free(nodo);
+}
+
+NodoTrie* insert_trie(NodoTrie* raiz, std::string name, int index, int anime_ou_manga) {
+    // Insere o nome do manga ou do anime numa arvore TRIE
+    NodoTrie* temp = raiz;
+    for (int i=0; name[i] != '\0'; i++) {
+        if (name[i] <= 'Z' && name[i] >= 'A')
+        {
+            name[i] += 32;
+        }
+        if(name[i] <= 'z' && name[i] >= 'a'){
+            // Pega a posicao em que a letra sera filha do nodo
+            int j = name[i] - 'a';
+            if (temp->filhos[j] == NULL) {
+                // Se o filho ainda nao existe, cria o filho
+                temp->filhos[j] = cria_NodoTrie(name[i]);
+            }
+            temp = temp->filhos[j];
+        }
+    }
+    // Temp eh folha
+    temp->eh_folha = 1;
+    // Temp recebe index da lista onde o dado se encontra
+    if (anime_ou_manga == ANIME)
+    {
+        temp->indexanime = index;
+    }
+    else if (anime_ou_manga == MANGA)
+    {
+        temp->indexmanga = index;
+    }
+    return raiz;
+}
+
+int busca_trie(NodoTrie* raiz, std::string name, int anime_ou_manga)
+{
+    // Procura pelo nome do anime/manga na TRIE
+    NodoTrie* temp = raiz;
+
+    for(int i=0; name[i]!='\0'; i++)
+    {
+        if (name[i] <= 'Z' && name[i] >= 'A')
+        {
+            name[i] += 32;
+        }
+        if(name[i] <= 'z' && name[i] >= 'a'){
+            int j = name[i] - 'a';
+            if (temp->filhos[j] == NULL){
+                return -1;
+            }
+            temp = temp->filhos[j];
+        }
+    }
+    if (temp != NULL && temp->eh_folha == 1)
+    {
+        if (anime_ou_manga == ANIME)
+        {
+            return temp->indexanime;
+        }
+        else if (anime_ou_manga == MANGA)
+        {
+            return temp->indexmanga;
+        }
+    }
+    return -1;
+}
+
+int checa_divergencia(NodoTrie* raiz, std::string name) {
+    // Checa se a arvore segue adiante apos o ultimo caracter do nome
+    // e retorna a maior posicao dentro do nome em que essa ramificacao ocorre
+    NodoTrie* temp = raiz;
+    int tam = name.size();
+    if (tam == 0)
+        return 0;
+    // O retorno eh o maior indice onde a ramificacao ocorre
+    int ultimo_indice = 0;
+    for (int i=0; i < tam; i++) {
+        if (name[i] <= 'Z' && name[i] >= 'A')
+        {
+            name[i] += 32;
+        }
+        if(name[i] <= 'z' && name[i] >= 'a'){
+            int j = name[i] - 'a';
+            if (temp->filhos[j]) {
+                // Se temp->filhos´[j] existe
+                // eh necessario checar se existe um filho seu tambem
+                // em que ha uma possivel ramificacao
+                for (int k=0; j<NTRIE; k++) {
+                    if (k != j && temp->filhos[k]) {
+                        // Um filho foi encontrado, ha ramificacao
+                        ultimo_indice = i + 1;
+                        break;
+                    }
+                }
+                // Pula para o proximo filho da sequencia
+                temp = temp->filhos[j];
+            }
+        }
+    }
+    return ultimo_indice;
+}
+
+std::string busca_maior_prefixo(NodoTrie* raiz, std::string name) {
+    // Encontra o maior prefixo que o nome tem em comum com outros nomes
+    if (name[0] == '\0')
+        return NULL;
+
+    // Inicialmente, eh considerado que o maior prefixo eh o proprio nome,
+    // e de tras pra frente vai sendo procurado um ponto em que ha um prefixo
+    // em comum
+    std::string maior_prefixo = name;
+
+    int ramificacao_index  = checa_divergencia(raiz, maior_prefixo) - 1;
+    if (ramificacao_index >= 0) {
+        // Houve ramificacao, eh necessario atualizar o valor de maior_prefixo
+        // para ser do tamanho ate onde houve a ramificacao
+        maior_prefixo[ramificacao_index] = '\0';
+    }
+    return maior_prefixo;
+}
+
+int nodo_eh_folha(NodoTrie* raiz, std::string name) {
+    // Checa se o nome na raiz passada eh um nodo folha
+    NodoTrie* temp = raiz;
+    for (int i=0; name[i]; i++) {
+        if (name[i] <= 'Z' && name[i] >= 'A')
+        {
+            name[i] += 32;
+        }
+        if(name[i] <= 'z' && name[i] >= 'a'){
+            int j = name[i] - 'a';
+            if (temp->filhos[j]) {
+                temp = temp->filhos[j];
+            }
+        }
+    }
+    return temp->eh_folha;
+}
+
+NodoTrie* delete_trie(NodoTrie* raiz, std::string name) {
+    // Deleta o nome passado de argumento da arvore TRIE
+    if (!raiz)
+        return NULL;
+    if (name[0] == '\0')
+        return raiz;
+    // Se o nodo nao for folha, nao eh necessario mais nada
+    if (!nodo_eh_folha(raiz, name)) {
+        return raiz;
+    }
+    NodoTrie* temp = raiz;
+    // Encontra a string maior_prefixo que nao eh o nome atual
+    std::string maior_prefixo = busca_maior_prefixo(raiz, name);
+
+    if (maior_prefixo[0] == '\0') {
+        return raiz;
+    }
+
+    int i;
+    for (i=0; maior_prefixo[i] != '\0'; i++) {
+        if (maior_prefixo[i] <= 'Z' && maior_prefixo[i] >= 'A')
+        {
+            maior_prefixo[i] += 32;
+        }
+        if(maior_prefixo[i] <= 'z' && maior_prefixo[i] >= 'a'){
+            int j = maior_prefixo[i] - 'a';
+            if (temp->filhos[j] != NULL) {
+                // Continua se movendo ate o nodo mais profundo do prefixo em comum
+                temp = temp->filhos[j];
+            }
+            else {
+                // O nodo nao foi encontrado, simplesmente retorna
+                return raiz;
+            }
+        }
+    }
+    // O nodo mais profundo em comum foi encontrado, agora,
+    // a sequencia a partir dele ate o nome sera deletada
+    int len = name.size();
+    for (; i < len; i++) {
+        if (name[i] <= 'Z' && name[i] >= 'A')
+        {
+            name[i] += 32;
+        }
+        if(name[i] <= 'z' && name[i] >= 'a'){
+            int j = name[i] - 'a';
+            if (temp->filhos[j] != NULL) {
+                // Deleta a sequencia a partir do prefixo em comum
+                NodoTrie* temp2 = temp->filhos[j];
+                temp->filhos[j] = NULL;
+                free_NodoTrie(temp2);
+
+            }
+        }
+    }
+    return raiz;
+}
+
+void print_trie(NodoTrie* raiz) {
+    // Printa os nodos de uma arvore TRIE
+    if (!raiz)
+        return;
+    NodoTrie* temp = raiz;
+    printf("%c -> ", temp->caracter);
+    for (int i=0; i<NTRIE; i++) {
+        print_trie(temp->filhos[i]);
+    }
+}
+
+void print_nome(NodoTrie* raiz, std::string name, int anime_ou_manga) {
+    // Procura por um determinado nome em uma arvore TRIE
+    std::cout << "Searching for " << name << " ";
+    if (busca_trie(raiz, name, anime_ou_manga) == -1)
+        printf("Not Found\n");
+    else
+        printf("Found!\n");
+}
+
