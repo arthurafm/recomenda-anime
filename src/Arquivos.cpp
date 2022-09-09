@@ -73,12 +73,12 @@ void ProcessaArquivoCSV(){
     bin_anime.close();
     bin_manga.close();
 
-    char bpt_anime_arq[] = "bpt_anime.bin", bpt_manga_arq[] = "bpt_manga.bin", write[] = "w";
-    FILE *bin_bpt_anime = NULL, *bin_bpt_manga;
-    AbreArquivo(&bin_bpt_anime, bpt_anime_arq, write);
+    char bpt_anime_arq[] = "bpt_anime.bin", bpt_manga_arq[] = "bpt_manga.bin", writeb[] = "wb";
+    FILE *bin_bpt_anime = NULL, *bin_bpt_manga = NULL;
+    AbreArquivo(&bin_bpt_anime, bpt_anime_arq, writeb);
     bpt_anime.armazenaBPTree(bpt_anime.getRaiz(), bin_bpt_anime);
     fclose(bin_bpt_anime);
-    AbreArquivo(&bin_bpt_manga, bpt_manga_arq, write);
+    AbreArquivo(&bin_bpt_manga, bpt_manga_arq, writeb);
     bpt_manga.armazenaBPTree(bpt_manga.getRaiz(), bin_bpt_manga);
     fclose(bin_bpt_manga);
 }
@@ -563,7 +563,7 @@ void BPTree::removeInterno(int chave, Nodo *cursor, Nodo *filho){
 void BPTree::display(Nodo *cursor){
     if(cursor != NULL){
         for(int i = 0; i < cursor->numChaves; i++){
-            std::cout << cursor->chaves[i] << "-" << cursor->index[i] << " ";
+            std::cout << cursor->chaves[i] << "." << cursor->index[i] << " ";
         }
         std::cout << "\n";
         if(cursor->ehFolha != true){
@@ -581,10 +581,15 @@ Nodo *BPTree::getRaiz(){
 
 // Função para armazenar árvore B+ em binário
 void BPTree::armazenaBPTree(Nodo *cursor, FILE* arq){
+    int aux1, aux2;
     if(cursor != NULL){
         for(int i = 0; i < cursor->numChaves; i++){
-            fwrite(&(cursor->chaves[i]), sizeof(int), 1, arq);
-            fwrite(&(cursor->index[i]), sizeof(int), 1, arq);
+            if(cursor->ehFolha == true){
+                aux1 = cursor->chaves[i];
+                aux2 = cursor->index[i];
+                fwrite(&aux1, sizeof(aux1), 1, arq);
+                fwrite(&aux2, sizeof(aux2), 1, arq);
+            }
         }
         if(cursor->ehFolha != true){
             for(int i = 0; i < (cursor->numChaves + 1); i++){

@@ -11,6 +11,9 @@ class Anime{
 
         Anime(std::string linha);
         Anime();
+        Anime(int id, std::string name, float score, std::string genres, std::string english_name, std::string type, int episodes, std::string aired, std::string premiered, std::string producers,
+             std::string licensors, std::string studios, std::string source, std::string duration, std::string rating, int ranked, int popularity, int members, int favorites, int watching,
+             int completed, int on_hold, int dropped, int plan_to_watch, int score10, int score9, int score8, int score7, int score6, int score5, int score4, int score3, int score2, int score1);
         ~Anime();
 
         int getID();
@@ -49,6 +52,7 @@ class Anime{
         int getScore1();
 
         void printaAnime();
+        void buscaAnimePorID(int id);
 
     private:
 

@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include "include\Registro.h"
-#include "include\Arquivos.h"
+#include "include\Operacoes.h"
 
 int main()
 {
@@ -14,7 +13,8 @@ int main()
           O programa deve importar múltiplos documentos de entrada. */
         ProcessaArquivoCSV();
     }
-    int op_code;
+    int op_code, id;
+    Anime buffer;
     do{
         std::cout << "Selecione a operacao desejada:" << std::endl << "1- Recomendar" << std::endl << "2- Buscar" << std::endl << "3- Adicionar" << std::endl << "4- Excluir"
         << std::endl << "5- Classificar ordenado" << std::endl << "6- Classificar inverso" << std::endl << "0- Sair" << std::endl;
@@ -22,7 +22,13 @@ int main()
         switch(op_code){
             case 1:
                 break;
-            case 2:
+            // In-staging
+            case 2:{
+                std::cout << "Digite o ID:";
+                std::cin >> id;
+                buffer.buscaAnimePorID(id);
+                buffer.printaAnime();
+            }
                 break;
             case 3:
                 break;
