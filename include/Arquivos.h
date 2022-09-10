@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX 3 // Define o grau das ·rvores B+
+#define MAX 3 // Define o grau das √°rvores B+
 #define NTRIE 26
 #define ANIME 1
 #define MANGA 2
@@ -17,7 +17,7 @@ short AbreArquivo(FILE **arq, char nome_arq[], char *modo);
 short ArquivoExiste(std::string name);
 void ProcessaArquivoCSV();
 
-// Nodo da ·rvore B+
+// Nodo da √°rvore B+
 class Nodo{
     public:
         Nodo();
@@ -29,7 +29,7 @@ class Nodo{
         friend class BPTree;
 };
 
-// ¡rvore B+
+// √Årvore B+
 class BPTree{
     public:
         BPTree();
@@ -75,3 +75,7 @@ NodoTrie* delete_trie(NodoTrie* raiz, std::string name);
 void print_trie(NodoTrie* raiz);
 
 void print_nome(NodoTrie* raiz, std::string name, int anime_ou_manga);
+
+void armazenaTRIE(NodoTrie *raiz, FILE *arq);
+
+NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq);
