@@ -3,7 +3,7 @@
 #include <fstream>
 #include "..\include\Registro.h"
 
-// FunÁ„o para abrir arquivos pela stdio.h
+// Fun√ß√£o para abrir arquivos pela stdio.h
 short AbreArquivo(FILE **arq, char *nome_arq, char *modo){
     *arq = fopen(nome_arq, modo);
     if(*arq == NULL){
@@ -14,7 +14,7 @@ short AbreArquivo(FILE **arq, char *nome_arq, char *modo){
     }
 }
 
-// FunÁ„o para saber se o arquivo existe ou n„o
+// Fun√ß√£o para saber se o arquivo existe ou n√£o
 short ArquivoExiste(std::string name){
     FILE *file = fopen(name.c_str(), "r");
     if(file){
@@ -26,7 +26,7 @@ short ArquivoExiste(std::string name){
     }
 }
 
-// FunÁ„o que lÍ CSVs e cria arquivos binarios
+// Fun√ß√£o que l√™ CSVs e cria arquivos binarios
 void ProcessaArquivoCSV(){
     // Buffers de leitura de linha
     std::ifstream entrada_anime("anime.csv");
@@ -47,11 +47,11 @@ void ProcessaArquivoCSV(){
         dados_entrada_manga.push_back(reg2);
     }
 
-    /* 2. ApÛs coletar ou extrair os dados, o programa dever· usar arquivos bin·rios prÛprios que armazenar„o todos os dados, independentes dos arquivos originais.
-          Tais arquivos poder„o ser organizados tanto de forma sequencial, quanto serial. PorÈm È obrigatÛrio que sejam implementados Ìndices de acesso que auxiliem
+    /* 2. Ap√≥s coletar ou extrair os dados, o programa dever√° usar arquivos bin√°rios pr√≥prios que armazenar√£o todos os dados, independentes dos arquivos originais.
+          Tais arquivos poder√£o ser organizados tanto de forma sequencial, quanto serial. Por√©m √© obrigat√≥rio que sejam implementados √≠ndices de acesso que auxiliem
           na consulta a esses dados. */
 
-    // CriaÁ„o das ·rvores B+
+    // Cria√ß√£o das √°rvores B+
     BPTree bpt_anime, bpt_manga;
     for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
         bpt_anime.insereBPTree(dados_entrada_anime[i].id, i);
@@ -60,7 +60,7 @@ void ProcessaArquivoCSV(){
         bpt_manga.insereBPTree(dados_entrada_manga[i].id, i);
     }
 
-    // ManipulaÁ„o de arquivos bin·rios
+    // Manipula√ß√£o de arquivos bin√°rios
     std::ofstream bin_anime, bin_manga;
     bin_anime.open("anime.bin", std::ios::binary);
     bin_manga.open("manga.bin", std::ios::binary);
@@ -83,21 +83,21 @@ void ProcessaArquivoCSV(){
     fclose(bin_bpt_manga);
 }
 
-// Construtor para nodos da ·rvore B+ Tree
+// Construtor para nodos da √°rvore B+ Tree
 Nodo::Nodo(){
     chaves = new int[MAX];
     index = new int[MAX];
     pChaves = new Nodo *[MAX + 1];
 }
 
-// Construtor para a ·rvore B+ Tree
+// Construtor para a √°rvore B+ Tree
 BPTree::BPTree(){
     raiz = NULL;
 }
 
-// Procura na ·rvore B+
+// Procura na √°rvore B+
 int BPTree::procuraBPTree(int chave){
-    if(raiz == NULL){ // Se ·rvore for vazia, devolve -1
+    if(raiz == NULL){ // Se √°rvore for vazia, devolve -1
         return -1;
     }
     else{
@@ -116,23 +116,23 @@ int BPTree::procuraBPTree(int chave){
         }
         for(int i = 0; i < cursor->numChaves; i++){
             if(cursor->chaves[i] == chave){
-                return cursor->index[i]; // Se achar, devolve o Ìndice
+                return cursor->index[i]; // Se achar, devolve o √≠ndice
             }
         }
-        return -1; // Se n„o achar, devolve -1
+        return -1; // Se n√£o achar, devolve -1
     }
 }
 
-// InserÁ„o na ·rvore B+
+// Inser√ß√£o na √°rvore B+
 void BPTree::insereBPTree(int chave, int indice){
-    if (raiz == NULL){ // Se a ·rvore for vazia, insere na raiz
+    if (raiz == NULL){ // Se a √°rvore for vazia, insere na raiz
         raiz = new Nodo;
         raiz->chaves[0] = chave;
         raiz->index[0] = indice;
         raiz->ehFolha = true;
         raiz->numChaves = 1;
     }
-    else{ // Se a ·rvore n„o for vazia
+    else{ // Se a √°rvore n√£o for vazia
         Nodo *cursor = raiz;
         Nodo *pai;
         while(cursor->ehFolha == false){
@@ -148,7 +148,7 @@ void BPTree::insereBPTree(int chave, int indice){
                 }
             }
         }
-        if(cursor->numChaves < MAX){ // Se o nodo ainda n„o estiver cheio
+        if(cursor->numChaves < MAX){ // Se o nodo ainda n√£o estiver cheio
             int i = 0;
             while((chave > cursor->chaves[i]) && (i < cursor->numChaves)){
                 i++;
@@ -211,7 +211,7 @@ void BPTree::insereBPTree(int chave, int indice){
     }
 }
 
-// FunÁ„o recursiva auxiliar de inserÁ„o
+// Fun√ß√£o recursiva auxiliar de inser√ß√£o
 void BPTree::insereInterno(int chave, int indice, Nodo *cursor, Nodo *filho){
     if(cursor->numChaves < MAX){
     int i = 0;
@@ -252,7 +252,7 @@ void BPTree::insereInterno(int chave, int indice, Nodo *cursor, Nodo *filho){
         }
         buffer_ch[i] = chave;
         buffer_in[i] = indice;
-        for(int j = (MAX + 1); j > i + 1; j--){ // PossÌvel erro
+        for(int j = (MAX + 1); j > i + 1; j--){ // Poss√≠vel erro
             buffer_ptr[j] = buffer_ptr[j - 1];
         }
         buffer_ptr[i + 1] = filho;
@@ -303,7 +303,7 @@ Nodo *BPTree::achaPai(Nodo *cursor, Nodo *filho){
   return pai;
 }
 
-// Remove na ·rvore B+
+// Remove na √°rvore B+
 void BPTree::removeBPTree(int chave){
     if(raiz == NULL){
         return;
@@ -428,7 +428,7 @@ void BPTree::removeBPTree(int chave){
     }
 }
 
-// FunÁ„o recursiva auxiliar de remoÁ„o
+// Fun√ß√£o recursiva auxiliar de remo√ß√£o
 void BPTree::removeInterno(int chave, Nodo *cursor, Nodo *filho){
     if(cursor == raiz){
         if(cursor->numChaves == 1){
@@ -559,7 +559,7 @@ void BPTree::removeInterno(int chave, Nodo *cursor, Nodo *filho){
     }
 }
 
-// Printa a ·rvore B+ para debug
+// Printa a √°rvore B+ para debug
 void BPTree::display(Nodo *cursor){
     if(cursor != NULL){
         for(int i = 0; i < cursor->numChaves; i++){
@@ -574,12 +574,12 @@ void BPTree::display(Nodo *cursor){
     }
 }
 
-// Devolve a raiz da ·rvore B+
+// Devolve a raiz da √°rvore B+
 Nodo *BPTree::getRaiz(){
     return raiz;
 }
 
-// FunÁ„o para armazenar ·rvore B+ em bin·rio
+// Fun√ß√£o para armazenar √°rvore B+ em bin√°rio
 void BPTree::armazenaBPTree(Nodo *cursor, FILE* arq){
     int aux1, aux2;
     if(cursor != NULL){
@@ -703,7 +703,7 @@ int checa_divergencia(NodoTrie* raiz, std::string name) {
         if(name[i] <= 'z' && name[i] >= 'a'){
             int j = name[i] - 'a';
             if (temp->filhos[j]) {
-                // Se temp->filhos¥[j] existe
+                // Se temp->filhos¬¥[j] existe
                 // eh necessario checar se existe um filho seu tambem
                 // em que ha uma possivel ramificacao
                 for (int k=0; j<NTRIE; k++) {
@@ -836,3 +836,60 @@ void print_nome(NodoTrie* raiz, std::string name, int anime_ou_manga) {
         printf("Found!\n");
 }
 
+void armazenaTRIE(NodoTrie* raiz, FILE* arq)
+{
+    char caracter;
+    int folha, idxanime, idxmanga;
+    NodoTrie* filhos[NTRIE];
+    NodoTrie* temp = raiz;
+    if (temp != NULL)
+    {
+        caracter = temp->caracter;
+        folha = temp->eh_folha;
+        idxanime = temp->indexanime;
+        idxmanga = temp->indexmanga;
+        for (int i = 0; i < NTRIE; i++)
+        {
+            filhos[i] = temp->filhos[i];
+        }
+        fwrite(&caracter, sizeof(caracter), 1, arq);
+        fwrite(&folha, sizeof(folha), 1, arq);
+        fwrite(&idxanime, sizeof(idxanime), 1, arq);
+        fwrite(&idxmanga, sizeof(idxmanga), 1, arq);
+        for (int i = 0; i < NTRIE; i++)
+        {
+            fwrite(&filhos[i], sizeof(filhos[i]), 1, arq);
+            armazenaTRIE(filhos[i], arq);
+        }
+    }
+}
+
+NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq)
+{
+    char buffer_caracter;
+    int buffer_folha, buffer_idxanime, buffer_idxmanga;
+    NodoTrie* buffer_filhos[NTRIE];
+
+    NodoTrie* temp = raiz;
+    NodoTrie* buffer;
+    fread(&buffer_caracter, sizeof(buffer_caracter), 1, arq);
+    fread(&buffer_folha, sizeof(buffer_folha), 1, arq);
+    fread(&buffer_idxanime, sizeof(buffer_idxanime), 1, arq);
+    fread(&buffer_idxmanga, sizeof(buffer_idxmanga), 1, arq);
+    temp->caracter = buffer_caracter;
+    temp->eh_folha = buffer_folha;
+    temp->indexanime = buffer_idxanime;
+    temp->indexmanga = buffer_idxmanga;
+    for (int i = 0; i < NTRIE; i++)
+    {
+        fread(&buffer_filhos[i], sizeof(buffer_filhos[i]), 1, arq);
+        temp->filhos[i] = buffer_filhos[i];
+        if (temp->filhos[i] != NULL)
+        {
+            buffer = cria_NodoTrie('\0');
+            temp->filhos[i] = buffer;
+            temp->filhos[i] = recuperaTRIE(temp->filhos[i], arq);
+        }
+    }
+    return raiz;
+}
