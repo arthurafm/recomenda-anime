@@ -14,29 +14,54 @@ int main()
         ProcessaArquivoCSV();
     }
     int op_code, id;
-    Anime buffer;
     do{
-        std::cout << "Selecione a operacao desejada:" << std::endl << "1- Recomendar" << std::endl << "2- Buscar" << std::endl << "3- Adicionar" << std::endl << "4- Excluir"
-        << std::endl << "5- Classificar ordenado" << std::endl << "6- Classificar inverso" << std::endl << "0- Sair" << std::endl;
+        std::cout << "Selecione a operacao desejada:" << std::endl
+        << "1: Recomendar Anime" << std::endl << "2: Buscar Anime" << std::endl << "3: Excluir Anime"
+        << std::endl << "4: Top Anime ordenado" << std::endl << "5: Top Anime inverso" << std::endl
+        << "-1: Recomendar Manga" << std::endl << "-2: Buscar Manga" << std::endl << "-3: Excluir Manga"
+        << std::endl << "-4: Top Manga" << std::endl << "-5: Top Manga inverso" << std::endl
+        << std::endl << "0: Sair" << std::endl;
         std::cin >> op_code;
         switch(op_code){
             case 1:
                 break;
-            // In-staging
+                /* 5. Permitir a busca de informações dos arquivos locais por algum critério.
+                  (a) busca pela chave principal de um elemento é obrigatória. */
             case 2:{
                 std::cout << "Digite o ID:";
                 std::cin >> id;
-                buffer.buscaAnimePorID(id);
-                buffer.printaAnime();
+                buscaAnimePorID(id);
             }
                 break;
             case 3:
                 break;
+                /* 4. Permitir ao usuário classificar os dados dos arquivos locias em ordem normal e inversa;
+                  para visualização não ficar muito poluída, pode-se mostrar apenas os TOP N resultados ordenados. */
             case 4:
+                ordenaAnime();
                 break;
             case 5:
+                ordenaAnimeInverso();
                 break;
-            case 6:
+            case -1:
+                break;
+                /* 5. Permitir a busca de informações dos arquivos locais por algum critério.
+                  (a) busca pela chave principal de um elemento é obrigatória. */
+            case -2:{
+                std::cout << "Digite o ID:";
+                std::cin >> id;
+                buscaMangaPorID(id);
+            }
+                break;
+            case -3:
+                break;
+                /* 4. Permitir ao usuário classificar os dados dos arquivos locias em ordem normal e inversa;
+                  para visualização não ficar muito poluída, pode-se mostrar apenas os TOP N resultados ordenados. */
+            case -4:
+                ordenaManga();
+                break;
+            case -5:
+                ordenaMangaInverso();
                 break;
             case 0:
                 op_code = 0;

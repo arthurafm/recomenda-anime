@@ -54,10 +54,10 @@ void ProcessaArquivoCSV(){
     // Criação das árvores B+
     BPTree bpt_anime, bpt_manga;
     for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
-        bpt_anime.insereBPTree(dados_entrada_anime[i].getID(), i);
+        bpt_anime.insereBPTree(dados_entrada_anime[i].id, i);
     }
     for(unsigned int i = 0; i < dados_entrada_manga.size(); i++){
-        bpt_manga.insereBPTree(dados_entrada_manga[i].getID(), i);
+        bpt_manga.insereBPTree(dados_entrada_manga[i].id, i);
     }
 
     // Manipulação de arquivos binários
@@ -73,7 +73,7 @@ void ProcessaArquivoCSV(){
     bin_anime.close();
     bin_manga.close();
 
-    char bpt_anime_arq[] = "bpt_anime.bin", bpt_manga_arq[] = "bpt_manga.bin", writeb[] = "wb";
+    char bpt_anime_arq[] = "bpt_anime.bin", writeb[] = "wb", bpt_manga_arq[] = "bpt_manga.bin";
     FILE *bin_bpt_anime = NULL, *bin_bpt_manga = NULL;
     AbreArquivo(&bin_bpt_anime, bpt_anime_arq, writeb);
     bpt_anime.armazenaBPTree(bpt_anime.getRaiz(), bin_bpt_anime);
