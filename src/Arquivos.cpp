@@ -621,7 +621,7 @@ void free_NodoTrie(NodoTrie* nodo) {
     free(nodo);
 }
 
-NodoTrie* insert_trie(NodoTrie* raiz, std::string name, int index, int anime_ou_manga) {
+NodoTrie* insert_trie(NodoTrie* raiz, char* name, int index, int anime_ou_manga) {
     // Insere o nome do manga ou do anime numa arvore TRIE
     NodoTrie* temp = raiz;
     for (int i=0; name[i] != '\0'; i++) {
@@ -653,7 +653,7 @@ NodoTrie* insert_trie(NodoTrie* raiz, std::string name, int index, int anime_ou_
     return raiz;
 }
 
-int busca_trie(NodoTrie* raiz, std::string name, int anime_ou_manga)
+int busca_trie(NodoTrie* raiz, char* name, int anime_ou_manga)
 {
     // Procura pelo nome do anime/manga na TRIE
     NodoTrie* temp = raiz;
@@ -686,11 +686,11 @@ int busca_trie(NodoTrie* raiz, std::string name, int anime_ou_manga)
     return -1;
 }
 
-int checa_divergencia(NodoTrie* raiz, std::string name) {
+int checa_divergencia(NodoTrie* raiz, char* name) {
     // Checa se a arvore segue adiante apos o ultimo caracter do nome
     // e retorna a maior posicao dentro do nome em que essa ramificacao ocorre
     NodoTrie* temp = raiz;
-    int tam = name.size();
+    int tam = strlen(name);
     if (tam == 0)
         return 0;
     // O retorno eh o maior indice onde a ramificacao ocorre
@@ -721,7 +721,7 @@ int checa_divergencia(NodoTrie* raiz, std::string name) {
     return ultimo_indice;
 }
 
-std::string busca_maior_prefixo(NodoTrie* raiz, std::string name) {
+char* busca_maior_prefixo(NodoTrie* raiz, char* name) {
     // Encontra o maior prefixo que o nome tem em comum com outros nomes
     if (name[0] == '\0')
         return NULL;
@@ -729,18 +729,26 @@ std::string busca_maior_prefixo(NodoTrie* raiz, std::string name) {
     // Inicialmente, eh considerado que o maior prefixo eh o proprio nome,
     // e de tras pra frente vai sendo procurado um ponto em que ha um prefixo
     // em comum
-    std::string maior_prefixo = name;
+    int tam = strlen(name);
+    char* maior_prefixo = (char*) calloc (tam + 1, sizeof(char));
+
+    for (int i = 0; name[i] != '\0'; i++)
+    {
+        maior_prefixo[i] = name[i];
+    }
+    maior_prefixo[tam] = '\0';
 
     int ramificacao_index  = checa_divergencia(raiz, maior_prefixo) - 1;
     if (ramificacao_index >= 0) {
         // Houve ramificacao, eh necessario atualizar o valor de maior_prefixo
         // para ser do tamanho ate onde houve a ramificacao
         maior_prefixo[ramificacao_index] = '\0';
+        maior_prefixo = (char*) realloc (maior_prefixo, (ramificacao_index + 1) * sizeof(char));
     }
     return maior_prefixo;
 }
 
-int nodo_eh_folha(NodoTrie* raiz, std::string name) {
+int nodo_eh_folha(NodoTrie* raiz, char* name) {
     // Checa se o nome na raiz passada eh um nodo folha
     NodoTrie* temp = raiz;
     for (int i=0; name[i]; i++) {
@@ -758,7 +766,7 @@ int nodo_eh_folha(NodoTrie* raiz, std::string name) {
     return temp->eh_folha;
 }
 
-NodoTrie* delete_trie(NodoTrie* raiz, std::string name) {
+NodoTrie* delete_trie(NodoTrie* raiz, char* name) {
     // Deleta o nome passado de argumento da arvore TRIE
     if (!raiz)
         return NULL;
@@ -770,9 +778,10 @@ NodoTrie* delete_trie(NodoTrie* raiz, std::string name) {
     }
     NodoTrie* temp = raiz;
     // Encontra a string maior_prefixo que nao eh o nome atual
-    std::string maior_prefixo = busca_maior_prefixo(raiz, name);
+    char* maior_prefixo = busca_maior_prefixo(raiz, name);
 
     if (maior_prefixo[0] == '\0') {
+        free(maior_prefixo);
         return raiz;
     }
 
@@ -790,13 +799,14 @@ NodoTrie* delete_trie(NodoTrie* raiz, std::string name) {
             }
             else {
                 // O nodo nao foi encontrado, simplesmente retorna
+                free(maior_prefixo);
                 return raiz;
             }
         }
     }
     // O nodo mais profundo em comum foi encontrado, agora,
     // a sequencia a partir dele ate o nome sera deletada
-    int len = name.size();
+    int len = strlen(name);
     for (; i < len; i++) {
         if (name[i] <= 'Z' && name[i] >= 'A')
         {
@@ -813,6 +823,7 @@ NodoTrie* delete_trie(NodoTrie* raiz, std::string name) {
             }
         }
     }
+    free(maior_prefixo);
     return raiz;
 }
 
@@ -827,7 +838,7 @@ void print_trie(NodoTrie* raiz) {
     }
 }
 
-void print_nome(NodoTrie* raiz, std::string name, int anime_ou_manga) {
+void print_nome(NodoTrie* raiz, char* name, int anime_ou_manga) {
     // Procura por um determinado nome em uma arvore TRIE
     std::cout << "Searching for " << name << " ";
     if (busca_trie(raiz, name, anime_ou_manga) == -1)
