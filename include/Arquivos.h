@@ -60,21 +60,21 @@ NodoTrie* cria_NodoTrie(char caracter);
 
 void free_NodoTrie(NodoTrie* nodo);
 
-NodoTrie* insert_trie(NodoTrie* raiz, std::string name, int index, int anime_ou_manga);
+NodoTrie* insert_trie(NodoTrie* raiz, char* name, int index, int anime_ou_manga);
 
-int busca_trie(NodoTrie* raiz, std::string name, int anime_ou_manga);
+int busca_trie(NodoTrie* raiz, char* name, int anime_ou_manga);
 
-int checa_divergencia(NodoTrie* raiz, std::string name);
+int checa_divergencia(NodoTrie* raiz, char* name);
 
-std::string busca_maior_prefixo(NodoTrie* raiz, std::string name);
+char* busca_maior_prefixo(NodoTrie* raiz, char* name);
 
-int nodo_eh_folha(NodoTrie* raiz, std::string name);
+int nodo_eh_folha(NodoTrie* raiz, char* name);
 
-NodoTrie* delete_trie(NodoTrie* raiz, std::string name);
+NodoTrie* delete_trie(NodoTrie* raiz, char* name);
 
 void print_trie(NodoTrie* raiz);
 
-void print_nome(NodoTrie* raiz, std::string name, int anime_ou_manga);
+void print_nome(NodoTrie* raiz, char* name, int anime_ou_manga);
 
 void armazenaTRIE(NodoTrie *raiz, FILE *arq);
 
