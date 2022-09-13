@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 
 #define MAX 3 // Define o grau das árvores B+
 #define NTRIE 26
@@ -75,6 +76,10 @@ NodoTrie* delete_trie(NodoTrie* raiz, char* name);
 void print_trie(NodoTrie* raiz);
 
 void print_nome(NodoTrie* raiz, char* name, int anime_ou_manga);
+
+void pega_ids_anime(NodoTrie* raiz, std::vector <int> &ids);
+
+void pega_ids_manga(NodoTrie* raiz, std::vector <int> &ids);
 
 void armazenaTRIE(NodoTrie *raiz, FILE *arq);
 
