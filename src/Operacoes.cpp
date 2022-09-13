@@ -52,6 +52,102 @@ void buscaMangaPorID(int id){
     }
 }
 
+void buscaAnimePorPrefixo(char* nome)
+{
+    Anime buffer_anime;
+    NodoTrie* raiz = cria_NodoTrie('\0');
+    NodoTrie* raiz_original = raiz;
+    FILE *arqAnime, *arqTrie;
+    AbreArquivo(&arqTrie, "trie.bin", "rb");
+    recuperaTRIE(raiz, arqTrie);
+    fclose(arqTrie);
+
+    for(int i=0; nome[i]!='\0'; i++)
+    {
+        if (nome[i] <= 'Z' && nome[i] >= 'A')
+        {
+            nome[i] += 32;
+        }
+        if(nome[i] <= 'z' && nome[i] >= 'a'){
+            int j = nome[i] - 'a';
+            if (raiz->filhos[j] != NULL){
+                raiz = raiz->filhos[j];
+            }
+            else
+            {
+                std::cout << "Erro, nao ha animes que iniciam com " << nome << std::endl;
+                free_NodoTrie(raiz_original);
+                return;
+            }
+        }
+    }
+
+    std::vector<Anime> dados_entrada_anime;
+    std::vector<int> ids;
+    AbreArquivo(&arqAnime, "anime.bin", "rb");
+    while(!feof(arqAnime)){
+        fread(&buffer_anime, sizeof(buffer_anime), 1, arqAnime);
+        dados_entrada_anime.push_back(buffer_anime);
+    }
+    fclose(arqAnime);
+    pega_ids_anime(raiz, ids);
+
+    for (long long unsigned int i = 0; i < ids.size(); i++)
+    {
+        if (ids[i] != -1)
+            std::cout << "Encontrado: " << dados_entrada_anime[ids[i]].name << std::endl << "E seu ID: " << ids[i] << std::endl;
+    }
+    free_NodoTrie(raiz_original);
+}
+
+void buscaMangaPorPrefixo(char* nome)
+{
+    Manga buffer_manga;
+    NodoTrie* raiz = cria_NodoTrie('\0');
+    NodoTrie* raiz_original = raiz;
+    FILE *arqManga, *arqTrie;
+    AbreArquivo(&arqTrie, "trie.bin", "rb");
+    recuperaTRIE(raiz, arqTrie);
+    fclose(arqTrie);
+
+    for(int i=0; nome[i]!='\0'; i++)
+    {
+        if (nome[i] <= 'Z' && nome[i] >= 'A')
+        {
+            nome[i] += 32;
+        }
+        if(nome[i] <= 'z' && nome[i] >= 'a'){
+            int j = nome[i] - 'a';
+            if (raiz->filhos[j] != NULL){
+                raiz = raiz->filhos[j];
+            }
+            else
+            {
+                std::cout << "Erro, nao ha mangas que iniciam com " << nome << std::endl;
+                free_NodoTrie(raiz_original);
+                return;
+            }
+        }
+    }
+
+    std::vector<Manga> dados_entrada_manga;
+    std::vector<int> ids;
+    AbreArquivo(&arqManga, "manga.bin", "rb");
+    while(!feof(arqManga)){
+        fread(&buffer_manga, sizeof(buffer_manga), 1, arqManga);
+        dados_entrada_manga.push_back(buffer_manga);
+    }
+    fclose(arqManga);
+    pega_ids_manga(raiz, ids);
+
+    for (long long unsigned int i = 0; i < ids.size(); i++)
+    {
+        if (ids[i] != -1)
+            std::cout << "Encontrado: " << dados_entrada_manga[ids[i]].title << std::endl << "E seu ID: " << ids[i] << std::endl;
+    }
+    free_NodoTrie(raiz_original);
+}
+
 void ordenaAnime(){
     // Leitura do arquivo
     std::vector<Anime> dados_entrada_anime;
@@ -64,7 +160,7 @@ void ordenaAnime(){
     }
     arq_entrada.close();
 
-    // Ordenação via shellSort usando o ranking como parametro
+    // OrdenaÃ§Ã£o via shellSort usando o ranking como parametro
     int tamanhogaps;
     int n = dados_entrada_anime.size();
     int i = 0, j, k, l, h = 1;
@@ -78,7 +174,7 @@ void ordenaAnime(){
     while(h >= 1){
         for(j = 0; j < h; j++){
             for(k = j + h; k < n; k = k + h){
-                if((dados_entrada_anime[k].ranked == -1) || (dados_entrada_anime[k].ranked == 0)){ // Caso a informação for desconhecida, joga para o fim
+                if((dados_entrada_anime[k].ranked == -1) || (dados_entrada_anime[k].ranked == 0)){ // Caso a informaÃ§Ã£o for desconhecida, joga para o fim
                     dados_entrada_anime[k].ranked = 99999;
                 }
                 buffer_anime = dados_entrada_anime[k];
@@ -104,7 +200,7 @@ void ordenaAnime(){
     std::ofstream bin_anime;
     bin_anime.open("anime.bin", std::ios::binary);
     for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
-        if(dados_entrada_anime[i].ranked == 99999){ // Correção
+        if(dados_entrada_anime[i].ranked == 99999){ // CorreÃ§Ã£o
             dados_entrada_anime[i].ranked = -1;
         }
         bpt_anime.insereBPTree(dados_entrada_anime[i].id, i);
@@ -134,7 +230,7 @@ void ordenaAnimeInverso(){
     }
     arq_entrada.close();
 
-    // Ordenação via shellSort usando o ranking como parametro
+    // OrdenaÃ§Ã£o via shellSort usando o ranking como parametro
     int tamanhogaps;
     int n = dados_entrada_anime.size();
     int i = 0, j, k, l, h = 1;
@@ -198,7 +294,7 @@ void ordenaManga(){
     }
     arq_entrada.close();
 
-    // Ordenação via shellSort usando o ranking como parametro
+    // OrdenaÃ§Ã£o via shellSort usando o ranking como parametro
     int tamanhogaps;
     int n = dados_entrada_manga.size();
     int i = 0, j, k, l, h = 1;
@@ -212,7 +308,7 @@ void ordenaManga(){
     while(h >= 1){
         for(j = 0; j < h; j++){
             for(k = j + h; k < n; k = k + h){
-                if((dados_entrada_manga[k].ranked == -1) || (dados_entrada_manga[k].ranked == 0)){ // Caso a informação for desconhecida, joga para o fim
+                if((dados_entrada_manga[k].ranked == -1) || (dados_entrada_manga[k].ranked == 0)){ // Caso a informaÃ§Ã£o for desconhecida, joga para o fim
                     dados_entrada_manga[k].ranked = 99999;
                 }
                 buffer_manga = dados_entrada_manga[k];
@@ -238,7 +334,7 @@ void ordenaManga(){
     std::ofstream bin_manga;
     bin_manga.open("manga.bin", std::ios::binary);
     for(unsigned int i = 0; i < dados_entrada_manga.size(); i++){
-        if(dados_entrada_manga[i].ranked == 99999){ // Correção
+        if(dados_entrada_manga[i].ranked == 99999){ // CorreÃ§Ã£o
             dados_entrada_manga[i].ranked = -1;
         }
         bpt_manga.insereBPTree(dados_entrada_manga[i].id, i);
@@ -268,7 +364,7 @@ void ordenaMangaInverso(){
     }
     arq_entrada.close();
 
-    // Ordenação via shellSort usando o ranking como parametro
+    // OrdenaÃ§Ã£o via shellSort usando o ranking como parametro
     int tamanhogaps;
     int n = dados_entrada_manga.size();
     int i = 0, j, k, l, h = 1;
@@ -320,7 +416,7 @@ void ordenaMangaInverso(){
     dados_entrada_manga[2].printaManga();
 }
 
-// Geração de sequência de gaps para utilização na ordenação shellSort via CIURA
+// GeraÃ§Ã£o de sequÃªncia de gaps para utilizaÃ§Ã£o na ordenaÃ§Ã£o shellSort via CIURA
 std::vector<int> geraSequenciaDeGaps(int tam){
     std::vector<int> v;
     int e = 1;
