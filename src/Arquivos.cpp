@@ -60,6 +60,29 @@ void ProcessaArquivoCSV(){
         bpt_manga.insereBPTree(dados_entrada_manga[i].id, i);
     }
 
+    // Criacao da arvore TRIE
+    NodoTrie* raiztrie = cria_NodoTrie('\0');
+    for (unsigned long long int i = 0; i < dados_entrada_anime.size(); i++)
+    {
+        char* nome = (char*) calloc (strlen(dados_entrada_anime[i].name) + 1, sizeof(char));
+        for (unsigned int j = 0; j < strlen(dados_entrada_anime[i].name); j++)
+        {
+            nome[j] = dados_entrada_anime[i].name[j];
+        }
+        raiztrie = insert_trie(raiztrie, nome, i, ANIME);
+        //free(nome);
+    }
+    for (unsigned long long int i = 0; i < dados_entrada_manga.size(); i++)
+    {
+        char* nome = (char*) calloc (strlen(dados_entrada_manga[i].title) + 1, sizeof(char));
+        for (unsigned int j = 0; j < strlen(dados_entrada_manga[i].title); j++)
+        {
+            nome[j] = dados_entrada_manga[i].title[j];
+        }
+        raiztrie = insert_trie(raiztrie, nome, i, MANGA);
+        //free(nome);
+    }
+
     // Manipulação de arquivos binários
     std::ofstream bin_anime, bin_manga;
     bin_anime.open("anime.bin", std::ios::binary);
@@ -81,6 +104,12 @@ void ProcessaArquivoCSV(){
     AbreArquivo(&bin_bpt_manga, bpt_manga_arq, writeb);
     bpt_manga.armazenaBPTree(bpt_manga.getRaiz(), bin_bpt_manga);
     fclose(bin_bpt_manga);
+
+    char bin_trie_arq[] = "trie.bin";
+    FILE *bin_trie = NULL;
+    AbreArquivo(&bin_trie, bin_trie_arq, writeb);
+    armazenaTRIE(raiztrie, bin_trie);
+    fclose(bin_trie);
 }
 
 // Construtor para nodos da árvore B+ Tree
@@ -847,6 +876,36 @@ void print_nome(NodoTrie* raiz, char* name, int anime_ou_manga) {
         printf("Found!\n");
 }
 
+void pega_ids_anime(NodoTrie* raiz, std::vector <int> &ids) {
+    // Printa os nodos de uma arvore TRIE
+    if (!raiz)
+        return;
+
+    NodoTrie* temp = raiz;
+    if (temp->eh_folha)
+    {
+        ids.push_back(temp->indexanime);
+    }
+    for (int i=0; i<NTRIE; i++) {
+        pega_ids_anime(temp->filhos[i], ids);
+    }
+}
+
+void pega_ids_manga(NodoTrie* raiz, std::vector <int> &ids) {
+    // Printa os nodos de uma arvore TRIE
+    if (!raiz)
+        return;
+
+    NodoTrie* temp = raiz;
+    if (temp->eh_folha)
+    {
+        ids.push_back(temp->indexmanga);
+    }
+    for (int i=0; i<NTRIE; i++) {
+        pega_ids_manga(temp->filhos[i], ids);
+    }
+}
+
 void armazenaTRIE(NodoTrie* raiz, FILE* arq)
 {
     char caracter;
@@ -883,10 +942,12 @@ NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq)
 
     NodoTrie* temp = raiz;
     NodoTrie* buffer;
+
     fread(&buffer_caracter, sizeof(buffer_caracter), 1, arq);
     fread(&buffer_folha, sizeof(buffer_folha), 1, arq);
     fread(&buffer_idxanime, sizeof(buffer_idxanime), 1, arq);
     fread(&buffer_idxmanga, sizeof(buffer_idxmanga), 1, arq);
+
     temp->caracter = buffer_caracter;
     temp->eh_folha = buffer_folha;
     temp->indexanime = buffer_idxanime;
@@ -904,3 +965,4 @@ NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq)
     }
     return raiz;
 }
+   
