@@ -5,14 +5,15 @@
 int main()
 {
 
-    /* 3. Realizar a coleta e a persistÍncia de dados de maneira incremental, o programa deve manter os dados nos arquivos e, ao carregar, o programa deve ler os
-          dados processados anteriormente. Se novos dados forem processados, eles devem ser adicionados aos j· existentes. */
+    /* 3. Realizar a coleta e a persist√™ncia de dados de maneira incremental, o programa deve manter os dados nos arquivos e, ao carregar, o programa deve ler os
+          dados processados anteriormente. Se novos dados forem processados, eles devem ser adicionados aos j√° existentes. */
     if((ArquivoExiste("anime.bin") == -1) && (ArquivoExiste("manga.bin") == -1)){
 
-    /* 1. Processar dados brutos provenientes da Web ou a partir de arquivos locais, do tipo TXT, CSV, HTML ou XML, os quais ser„o a fonte de dados inicial;
-          O programa deve importar m˙ltiplos documentos de entrada. */
+    /* 1. Processar dados brutos provenientes da Web ou a partir de arquivos locais, do tipo TXT, CSV, HTML ou XML, os quais ser√£o a fonte de dados inicial;
+          O programa deve importar m√∫ltiplos documentos de entrada. */
         ProcessaArquivoCSV();
     }
+    char nome[200];
     int op_code, id;
     do{
         std::cout << "Selecione a operacao desejada:" << std::endl
@@ -24,9 +25,12 @@ int main()
         std::cin >> op_code;
         switch(op_code){
             case 1:
+                std::cout << "Digite o nome: ";
+                std::cin >> nome;
+                buscaAnimePorPrefixo(nome);
                 break;
-                /* 5. Permitir a busca de informaÁıes dos arquivos locais por algum critÈrio.
-                  (a) busca pela chave principal de um elemento È obrigatÛria. */
+                /* 5. Permitir a busca de informa√ß√µes dos arquivos locais por algum crit√©rio.
+                  (a) busca pela chave principal de um elemento √© obrigat√≥ria. */
             case 2:{
                 std::cout << "Digite o ID:";
                 std::cin >> id;
@@ -35,8 +39,8 @@ int main()
                 break;
             case 3:
                 break;
-                /* 4. Permitir ao usu·rio classificar os dados dos arquivos locias em ordem normal e inversa;
-                  para visualizaÁ„o n„o ficar muito poluÌda, pode-se mostrar apenas os TOP N resultados ordenados. */
+                /* 4. Permitir ao usu√°rio classificar os dados dos arquivos locias em ordem normal e inversa;
+                  para visualiza√ß√£o n√£o ficar muito polu√≠da, pode-se mostrar apenas os TOP N resultados ordenados. */
             case 4:
                 ordenaAnime();
                 break;
@@ -44,9 +48,12 @@ int main()
                 ordenaAnimeInverso();
                 break;
             case -1:
+                std::cout << "Digite o nome: ";
+                std::cin >> nome;
+                buscaMangaPorPrefixo(nome);
                 break;
-                /* 5. Permitir a busca de informaÁıes dos arquivos locais por algum critÈrio.
-                  (a) busca pela chave principal de um elemento È obrigatÛria. */
+                /* 5. Permitir a busca de informa√ß√µes dos arquivos locais por algum crit√©rio.
+                  (a) busca pela chave principal de um elemento √© obrigat√≥ria. */
             case -2:{
                 std::cout << "Digite o ID:";
                 std::cin >> id;
@@ -55,8 +62,8 @@ int main()
                 break;
             case -3:
                 break;
-                /* 4. Permitir ao usu·rio classificar os dados dos arquivos locias em ordem normal e inversa;
-                  para visualizaÁ„o n„o ficar muito poluÌda, pode-se mostrar apenas os TOP N resultados ordenados. */
+                /* 4. Permitir ao usu√°rio classificar os dados dos arquivos locias em ordem normal e inversa;
+                  para visualiza√ß√£o n√£o ficar muito polu√≠da, pode-se mostrar apenas os TOP N resultados ordenados. */
             case -4:
                 ordenaManga();
                 break;
