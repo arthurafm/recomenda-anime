@@ -33,7 +33,12 @@ int main()
                 buscaAnimePorID(id);
             }
                 break;
+                /* 1. Tratar exclusão de registros, o que envolve a implementação de funções para remover elementos das
+                      mais diversas estruturas de dados implementados. */
             case 3:
+                std::cout << "Digite o ID:";
+                std::cin >> id;
+                deletaAnime(id);
                 break;
                 /* 4. Permitir ao usuário classificar os dados dos arquivos locias em ordem normal e inversa;
                   para visualização não ficar muito poluída, pode-se mostrar apenas os TOP N resultados ordenados. */
@@ -53,7 +58,12 @@ int main()
                 buscaMangaPorID(id);
             }
                 break;
+                /* 1. Tratar exclusão de registros, o que envolve a implementação de funções para remover elementos das
+                      mais diversas estruturas de dados implementados. */
             case -3:
+                std::cout << "Digite o ID:";
+                std::cin >> id;
+                deletaManga(id);
                 break;
                 /* 4. Permitir ao usuário classificar os dados dos arquivos locias em ordem normal e inversa;
                   para visualização não ficar muito poluída, pode-se mostrar apenas os TOP N resultados ordenados. */

@@ -155,6 +155,7 @@ void BPTree::insereBPTree(int chave, int indice){
             }
             for(int j = cursor->numChaves; j > i; j--){
                 cursor->chaves[j] = cursor->chaves[j - 1];
+                cursor->index[j] = cursor->index[j - 1];
             }
             cursor->chaves[i] = chave;
             cursor->index[i] = indice;
@@ -163,6 +164,12 @@ void BPTree::insereBPTree(int chave, int indice){
             cursor->pChaves[cursor->numChaves - 1] = NULL;
         }
         else{ // Se o nodo estiver cheio
+                /*
+            std::cout << "Cursor:" << "\n"
+            << "Indices = " << cursor->index[0] << "   " << cursor->index[1] << "   "  << cursor->index[2] << "\n"
+            << "Chaves = " << cursor->chaves[0] << "   "  << cursor->chaves[1] << "   "  << cursor->chaves[2] << "\n"
+            << "NumFilhos = " << cursor->numChaves << "    ehFolha = " << cursor->ehFolha << std::endl;
+            */
             Nodo *n_folha = new Nodo;
             int buffer_ch[MAX + 1];
             int buffer_in[MAX + 1];
@@ -171,7 +178,7 @@ void BPTree::insereBPTree(int chave, int indice){
                 buffer_in[i] = cursor->index[i];
             }
             int i = 0, j;
-            while((chave > buffer_in[i]) && (i < MAX)){
+            while((chave > buffer_ch[i]) && (i < MAX)){
                 i++;
             }
             for (int j = MAX; j > i; j--){
@@ -194,6 +201,15 @@ void BPTree::insereBPTree(int chave, int indice){
                 n_folha->chaves[i] = buffer_ch[j];
                 n_folha->index[i] = buffer_in[j];
             }
+            /*
+            std::cout << "Cursor:" << "\n"
+            << "Indices = " << cursor->index[0] << "   " << cursor->index[1] << "   "  << cursor->index[2] << "\n"
+            << "Chaves = " << cursor->chaves[0] << "   "  << cursor->chaves[1] << "   "  << cursor->chaves[2] << "\n"
+            << "NumFilhos = " << cursor->numChaves << "    ehFolha = " << cursor->ehFolha << std::endl;
+            std::cout << "N_folha:" << "\n"
+            << "Indices = " << n_folha->index[0] << "   " << n_folha->index[1] << "   "  << n_folha->index[2] << "\n"
+            << "Chaves = " << n_folha->chaves[0] << "   "  << n_folha->chaves[1] << "   "  << n_folha->chaves[2] << "\n"
+            << "NumFilhos = " << n_folha->numChaves << "    ehFolha = " << n_folha->ehFolha << std::endl; */
             if(cursor == raiz){
                 Nodo *n_raiz = new Nodo;
                 n_raiz->chaves[0] = n_folha->chaves[0];
@@ -213,22 +229,27 @@ void BPTree::insereBPTree(int chave, int indice){
 
 // Função recursiva auxiliar de inserção
 void BPTree::insereInterno(int chave, int indice, Nodo *cursor, Nodo *filho){
+    /*
+    std::cout << "Cursor:" << "\n"
+        << "Indices = " << cursor->index[0] << "   " << cursor->index[1] << "   "  << cursor->index[2] << "\n"
+        << "Chaves = " << cursor->chaves[0] << "   "  << cursor->chaves[1] << "   "  << cursor->chaves[2] << "\n"
+        << "NumFilhos = " << cursor->numChaves << "    ehFolha = " << cursor->ehFolha << std::endl; */
     if(cursor->numChaves < MAX){
-    int i = 0;
-    while ((chave > cursor->chaves[i]) && (i < cursor->numChaves)){
-        i++;
-    }
-    for(int j = cursor->numChaves; j > i; j--){
-        cursor->chaves[j] = cursor->chaves[j - 1];
-        cursor->index[j] = cursor->index[j - 1];
-    }
-    for(int j = cursor->numChaves + 1; j > i + 1; j--){
-        cursor->pChaves[j] = cursor->pChaves[j - 1];
-    }
-    cursor->chaves[i] = chave;
-    cursor->index[i] = indice;
-    cursor->numChaves++;
-    cursor->pChaves[i + 1] = filho;
+        int i = 0;
+        while ((chave > cursor->chaves[i]) && (i < cursor->numChaves)){
+            i++;
+        }
+        for(int j = cursor->numChaves; j > i; j--){
+            cursor->chaves[j] = cursor->chaves[j - 1];
+            cursor->index[j] = cursor->index[j - 1];
+        }
+        for(int j = cursor->numChaves + 1; j > i + 1; j--){
+            cursor->pChaves[j] = cursor->pChaves[j - 1];
+        }
+        cursor->chaves[i] = chave;
+        cursor->index[i] = indice;
+        cursor->numChaves++;
+        cursor->pChaves[i + 1] = filho;
     }
     else{
         Nodo *n_interno = new Nodo;
@@ -236,8 +257,8 @@ void BPTree::insereInterno(int chave, int indice, Nodo *cursor, Nodo *filho){
         int buffer_in[MAX + 1];
         Nodo *buffer_ptr[MAX + 2];
         for (int i = 0; i < MAX; i++){
-        buffer_ch[i] = cursor->chaves[i];
-        buffer_in[i] = cursor->index[i];
+            buffer_ch[i] = cursor->chaves[i];
+            buffer_in[i] = cursor->index[i];
         }
         for(int i = 0; i < (MAX + 1); i++){
             buffer_ptr[i] = cursor->pChaves[i];
@@ -252,7 +273,7 @@ void BPTree::insereInterno(int chave, int indice, Nodo *cursor, Nodo *filho){
         }
         buffer_ch[i] = chave;
         buffer_in[i] = indice;
-        for(int j = (MAX + 1); j > i + 1; j--){ // Possível erro
+        for(int j = (MAX + 1); j > i + 1; j--){
             buffer_ptr[j] = buffer_ptr[j - 1];
         }
         buffer_ptr[i + 1] = filho;
@@ -564,6 +585,23 @@ void BPTree::display(Nodo *cursor){
     if(cursor != NULL){
         for(int i = 0; i < cursor->numChaves; i++){
             std::cout << cursor->chaves[i] << "." << cursor->index[i] << " ";
+        }
+        std::cout << "\n";
+        if(cursor->ehFolha != true){
+            for(int i = 0; i < (cursor->numChaves + 1); i++){
+                display(cursor->pChaves[i]);
+            }
+        }
+    }
+}
+
+// Printa a árvore B+ para debug
+void BPTree::displayFolhas(Nodo *cursor){
+    if(cursor != NULL){
+        for(int i = 0; i < cursor->numChaves; i++){
+            if(cursor->ehFolha == true){
+                std::cout << cursor->chaves[i] << "." << cursor->index[i] << " ";
+            }
         }
         std::cout << "\n";
         if(cursor->ehFolha != true){

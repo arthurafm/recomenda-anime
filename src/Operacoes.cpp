@@ -1,12 +1,13 @@
 #include "../include/Operacoes.h"
 
+
 void buscaAnimePorID(int id){
     Anime buffer_anime;
     BPTree buffer_bpt;
     int buffer_ch, buffer_in;
     std::ifstream arq, arq_bpt;
     arq_bpt.open("bpt_anime.bin", std::ios::binary);
-    while(!(arq_bpt.eof())){
+    while(!(arq_bpt.eof()) && (buffer_ch != id)){
         arq_bpt.read((char *) &buffer_ch, sizeof(int));
         arq_bpt.read((char *) &buffer_in, sizeof(int));
         buffer_bpt.insereBPTree(buffer_ch, buffer_in);
@@ -101,16 +102,50 @@ void ordenaAnime(){
 
     // Escrita no arquivo binario
     BPTree bpt_anime;
+    std::pair<int, int> buffer_pair;
+    std::vector<std::pair<int, int>> vetor_bpt;
     std::ofstream bin_anime;
     bin_anime.open("anime.bin", std::ios::binary);
     for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
         if(dados_entrada_anime[i].ranked == 99999){ // Correção
             dados_entrada_anime[i].ranked = -1;
         }
-        bpt_anime.insereBPTree(dados_entrada_anime[i].id, i);
+        buffer_pair.first = dados_entrada_anime[i].id;
+        buffer_pair.second = i;
+        vetor_bpt.push_back(buffer_pair);
         bin_anime.write(reinterpret_cast<char *>(&(dados_entrada_anime[i])), sizeof(dados_entrada_anime[i]));
     }
     bin_anime.close();
+    i = 0;
+    h = 1;
+    do{
+        i++;
+    }while(i < tamanhogaps);
+    i = i - 2;
+    h = sequenciaDeGaps[i];
+    while(h >= 1){
+        for(j = 0; j < h; j++){
+            for(k = j + h; k < n; k = k + h){
+                buffer_pair = vetor_bpt[k];
+                l = k - h;
+                while((l >= 0) && (vetor_bpt[l].first > buffer_pair.first)){
+                    vetor_bpt[l + h] = vetor_bpt[l];
+                    l = l - h;
+                }
+                vetor_bpt[l + h] = buffer_pair;
+            }
+        }
+        if(i != 0){
+            i--;
+            h = sequenciaDeGaps[i];
+        }
+        else{
+            h = 0;
+        }
+    }
+    for(unsigned int i = 0; i < vetor_bpt.size(); i++){
+        bpt_anime.insereBPTree(vetor_bpt[i].first, vetor_bpt[i].second);
+    }
     char bpt_anime_arq[] = "bpt_anime.bin", writeb[] = "wb";
     FILE *bin_bpt_anime = NULL;
     AbreArquivo(&bin_bpt_anime, bpt_anime_arq, writeb);
@@ -168,11 +203,45 @@ void ordenaAnimeInverso(){
 
     // Escrita no arquivo binario
     BPTree bpt_anime;
+    std::pair<int, int> buffer_pair;
+    std::vector<std::pair<int, int>> vetor_bpt;
     std::ofstream bin_anime;
     bin_anime.open("anime.bin", std::ios::binary);
     for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
-        bpt_anime.insereBPTree(dados_entrada_anime[i].id, i);
+        buffer_pair.first = dados_entrada_anime[i].id;
+        buffer_pair.second = i;
+        vetor_bpt.push_back(buffer_pair);
         bin_anime.write(reinterpret_cast<char *>(&(dados_entrada_anime[i])), sizeof(dados_entrada_anime[i]));
+    }
+    i = 0;
+    h = 1;
+    do{
+        i++;
+    }while(i < tamanhogaps);
+    i = i - 2;
+    h = sequenciaDeGaps[i];
+    while(h >= 1){
+        for(j = 0; j < h; j++){
+            for(k = j + h; k < n; k = k + h){
+                buffer_pair = vetor_bpt[k];
+                l = k - h;
+                while((l >= 0) && (vetor_bpt[l].first > buffer_pair.first)){
+                    vetor_bpt[l + h] = vetor_bpt[l];
+                    l = l - h;
+                }
+                vetor_bpt[l + h] = buffer_pair;
+            }
+        }
+        if(i != 0){
+            i--;
+            h = sequenciaDeGaps[i];
+        }
+        else{
+            h = 0;
+        }
+    }
+    for(unsigned int i = 0; i < vetor_bpt.size(); i++){
+        bpt_anime.insereBPTree(vetor_bpt[i].first, vetor_bpt[i].second);
     }
     bin_anime.close();
     char bpt_anime_arq[] = "bpt_anime.bin", writeb[] = "wb";
@@ -235,16 +304,50 @@ void ordenaManga(){
 
     // Escrita no arquivo binario
     BPTree bpt_manga;
+    std::pair<int, int> buffer_pair;
+    std::vector<std::pair<int, int>> vetor_bpt;
     std::ofstream bin_manga;
     bin_manga.open("manga.bin", std::ios::binary);
     for(unsigned int i = 0; i < dados_entrada_manga.size(); i++){
         if(dados_entrada_manga[i].ranked == 99999){ // Correção
             dados_entrada_manga[i].ranked = -1;
         }
-        bpt_manga.insereBPTree(dados_entrada_manga[i].id, i);
+        buffer_pair.first = dados_entrada_manga[i].id;
+        buffer_pair.second = i;
+        vetor_bpt.push_back(buffer_pair);
         bin_manga.write(reinterpret_cast<char *>(&(dados_entrada_manga[i])), sizeof(dados_entrada_manga[i]));
     }
     bin_manga.close();
+    i = 0;
+    h = 1;
+    do{
+        i++;
+    }while(i < tamanhogaps);
+    i = i - 2;
+    h = sequenciaDeGaps[i];
+    while(h >= 1){
+        for(j = 0; j < h; j++){
+            for(k = j + h; k < n; k = k + h){
+                buffer_pair = vetor_bpt[k];
+                l = k - h;
+                while((l >= 0) && (vetor_bpt[l].first > buffer_pair.first)){
+                    vetor_bpt[l + h] = vetor_bpt[l];
+                    l = l - h;
+                }
+                vetor_bpt[l + h] = buffer_pair;
+            }
+        }
+        if(i != 0){
+            i--;
+            h = sequenciaDeGaps[i];
+        }
+        else{
+            h = 0;
+        }
+    }
+    for(unsigned int i = 0; i < vetor_bpt.size(); i++){
+        bpt_manga.insereBPTree(vetor_bpt[i].first, vetor_bpt[i].second);
+    }
     char bpt_manga_arq[] = "bpt_manga.bin", writeb[] = "wb";
     FILE *bin_bpt_manga = NULL;
     AbreArquivo(&bin_bpt_manga, bpt_manga_arq, writeb);
@@ -302,13 +405,47 @@ void ordenaMangaInverso(){
 
     // Escrita no arquivo binario
     BPTree bpt_manga;
+    std::pair<int, int> buffer_pair;
+    std::vector<std::pair<int, int>> vetor_bpt;
     std::ofstream bin_manga;
     bin_manga.open("manga.bin", std::ios::binary);
     for(unsigned int i = 0; i < dados_entrada_manga.size(); i++){
-        bpt_manga.insereBPTree(dados_entrada_manga[i].id, i);
+        buffer_pair.first = dados_entrada_manga[i].id;
+        buffer_pair.second = i;
+        vetor_bpt.push_back(buffer_pair);
         bin_manga.write(reinterpret_cast<char *>(&(dados_entrada_manga[i])), sizeof(dados_entrada_manga[i]));
     }
     bin_manga.close();
+    i = 0;
+    h = 1;
+    do{
+        i++;
+    }while(i < tamanhogaps);
+    i = i - 2;
+    h = sequenciaDeGaps[i];
+    while(h >= 1){
+        for(j = 0; j < h; j++){
+            for(k = j + h; k < n; k = k + h){
+                buffer_pair = vetor_bpt[k];
+                l = k - h;
+                while((l >= 0) && (vetor_bpt[l].first > buffer_pair.first)){
+                    vetor_bpt[l + h] = vetor_bpt[l];
+                    l = l - h;
+                }
+                vetor_bpt[l + h] = buffer_pair;
+            }
+        }
+        if(i != 0){
+            i--;
+            h = sequenciaDeGaps[i];
+        }
+        else{
+            h = 0;
+        }
+    }
+    for(unsigned int i = 0; i < vetor_bpt.size(); i++){
+        bpt_manga.insereBPTree(vetor_bpt[i].first, vetor_bpt[i].second);
+    }
     char bpt_manga_arq[] = "bpt_manga.bin", writeb[] = "wb";
     FILE *bin_bpt_manga = NULL;
     AbreArquivo(&bin_bpt_manga, bpt_manga_arq, writeb);
@@ -336,4 +473,144 @@ std::vector<int> geraSequenciaDeGaps(int tam){
         v.push_back(e);
     }
     return v;
+}
+
+void deletaAnime(int id){
+    // Leitura do arquivo
+    std::vector<Anime> dados_entrada_anime;
+    Anime buffer_anime;
+    std::ifstream arq_entrada;
+    arq_entrada.open("anime.bin", std::ios::binary);
+    while(!(arq_entrada.eof())){
+        arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+        if(buffer_anime.id != id){ // Exclusão do elemento
+            dados_entrada_anime.push_back(buffer_anime);
+        }
+    }
+    arq_entrada.close();
+    // Escrita no arquivo binario
+    BPTree bpt_anime;
+    std::pair<int, int> buffer_pair;
+    std::vector<std::pair<int, int>> vetor_bpt;
+    std::ofstream bin_anime;
+    bin_anime.open("anime.bin", std::ios::binary);
+    for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
+        if(dados_entrada_anime[i].ranked == 99999){ // Correção
+            dados_entrada_anime[i].ranked = -1;
+        }
+        buffer_pair.first = dados_entrada_anime[i].id;
+        buffer_pair.second = i;
+        vetor_bpt.push_back(buffer_pair);
+        bin_anime.write(reinterpret_cast<char *>(&(dados_entrada_anime[i])), sizeof(dados_entrada_anime[i]));
+    }
+    bin_anime.close();
+    int tamanhogaps;
+    int n = dados_entrada_anime.size();
+    int i = 0, j, k, l, h = 1;
+    std::vector<int> sequenciaDeGaps = geraSequenciaDeGaps(n);
+    tamanhogaps = sequenciaDeGaps.size();
+    do{
+        i++;
+    }while(i < tamanhogaps);
+    i = i - 2;
+    h = sequenciaDeGaps[i];
+    while(h >= 1){
+        for(j = 0; j < h; j++){
+            for(k = j + h; k < n; k = k + h){
+                buffer_pair = vetor_bpt[k];
+                l = k - h;
+                while((l >= 0) && (vetor_bpt[l].first > buffer_pair.first)){
+                    vetor_bpt[l + h] = vetor_bpt[l];
+                    l = l - h;
+                }
+                vetor_bpt[l + h] = buffer_pair;
+            }
+        }
+        if(i != 0){
+            i--;
+            h = sequenciaDeGaps[i];
+        }
+        else{
+            h = 0;
+        }
+    }
+    for(unsigned int i = 0; i < vetor_bpt.size(); i++){
+        bpt_anime.insereBPTree(vetor_bpt[i].first, vetor_bpt[i].second);
+    }
+    char bpt_anime_arq[] = "bpt_anime.bin", writeb[] = "wb";
+    FILE *bin_bpt_anime = NULL;
+    AbreArquivo(&bin_bpt_anime, bpt_anime_arq, writeb);
+    bpt_anime.armazenaBPTree(bpt_anime.getRaiz(), bin_bpt_anime);
+    fclose(bin_bpt_anime);
+}
+
+void deletaManga(int id){
+    // Leitura do arquivo
+    std::vector<Manga> dados_entrada_manga;
+    Manga buffer_manga;
+    std::ifstream arq_entrada;
+    arq_entrada.open("manga.bin", std::ios::binary);
+    while(!(arq_entrada.eof())){
+        arq_entrada.read((char *) &buffer_manga, sizeof(Manga));
+        dados_entrada_manga.push_back(buffer_manga);
+    }
+    arq_entrada.close();
+    // Escrita no arquivo binario
+    BPTree bpt_manga;
+    std::pair<int, int> buffer_pair;
+    std::vector<std::pair<int, int>> vetor_bpt;
+    std::ofstream bin_manga;
+    bin_manga.open("manga.bin", std::ios::binary);
+    for(unsigned int i = 0; i < dados_entrada_manga.size(); i++){
+        if(dados_entrada_manga[i].ranked == 99999){ // Correção
+            dados_entrada_manga[i].ranked = -1;
+        }
+        buffer_pair.first = dados_entrada_manga[i].id;
+        buffer_pair.second = i;
+        vetor_bpt.push_back(buffer_pair);
+        bin_manga.write(reinterpret_cast<char *>(&(dados_entrada_manga[i])), sizeof(dados_entrada_manga[i]));
+    }
+    bin_manga.close();
+    int tamanhogaps;
+    int n = dados_entrada_manga.size();
+    int i = 0, j, k, l, h = 1;
+    std::vector<int> sequenciaDeGaps = geraSequenciaDeGaps(n);
+    tamanhogaps = sequenciaDeGaps.size();
+    do{
+        i++;
+    }while(i < tamanhogaps);
+    i = i - 2;
+    h = sequenciaDeGaps[i];
+    while(h >= 1){
+        for(j = 0; j < h; j++){
+            for(k = j + h; k < n; k = k + h){
+                buffer_pair = vetor_bpt[k];
+                l = k - h;
+                while((l >= 0) && (vetor_bpt[l].first > buffer_pair.first)){
+                    vetor_bpt[l + h] = vetor_bpt[l];
+                    l = l - h;
+                }
+                vetor_bpt[l + h] = buffer_pair;
+            }
+        }
+        if(i != 0){
+            i--;
+            h = sequenciaDeGaps[i];
+        }
+        else{
+            h = 0;
+        }
+    }
+    for(unsigned int i = 0; i < vetor_bpt.size(); i++){
+        bpt_manga.insereBPTree(vetor_bpt[i].first, vetor_bpt[i].second);
+    }
+    char bpt_manga_arq[] = "bpt_manga.bin", writeb[] = "wb";
+    FILE *bin_bpt_manga = NULL;
+    AbreArquivo(&bin_bpt_manga, bpt_manga_arq, writeb);
+    bpt_manga.armazenaBPTree(bpt_manga.getRaiz(), bin_bpt_manga);
+    fclose(bin_bpt_manga);
+    std::cout << std::endl << "TOP 3 MANGA:" << std::endl;
+    dados_entrada_manga[0].printaManga();
+    dados_entrada_manga[1].printaManga();
+    dados_entrada_manga[2].printaManga();
 }

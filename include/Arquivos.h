@@ -37,6 +37,7 @@ class BPTree{
         void removeBPTree(int chave);
         void insereBPTree(int chave, int indice);
         void display(Nodo *cursor);
+        void displayFolhas(Nodo *cursor);
         void armazenaBPTree(Nodo *cursor, FILE *arq);
         Nodo *getRaiz();
     private:

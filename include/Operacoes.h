@@ -8,5 +8,7 @@ void ordenaAnime();
 void ordenaAnimeInverso();
 void ordenaManga();
 void ordenaMangaInverso();
+void deletaAnime(int id);
+void deletaManga(int id);
 
 std::vector<int> geraSequenciaDeGaps(int tam);
