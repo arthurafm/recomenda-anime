@@ -7,8 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 
-#define MAX 3 // Define o grau das ·rvores B+
+#define GRAU 4 // Define o grau das √°rvores B+
 #define NTRIE 26
 #define ANIME 1
 #define MANGA 2
@@ -17,34 +18,42 @@ short AbreArquivo(FILE **arq, char nome_arq[], char *modo);
 short ArquivoExiste(std::string name);
 void ProcessaArquivoCSV();
 
-// Nodo da ·rvore B+
-class Nodo{
+// Nodo da √°rvore B+
+struct Nodo{
     public:
-        Nodo();
-    private:
+        Nodo(std::size_t _grau);
         bool ehFolha;
-        int *chaves, numChaves;
-        int *index;
-        Nodo **pChaves;
-        friend class BPTree;
+        std::size_t grau;
+        std::size_t numChaves;
+        int* chave;
+        int* indice;
+        Nodo** filhos;
+        Nodo* pai;
 };
 
-// ¡rvore B+
+// √Årvore B+
 class BPTree{
     public:
-        BPTree();
-        int procuraBPTree(int chave);
-        void removeBPTree(int chave);
-        void insereBPTree(int chave, int indice);
-        void display(Nodo *cursor);
-        void displayFolhas(Nodo *cursor);
-        void armazenaBPTree(Nodo *cursor, FILE *arq);
-        Nodo *getRaiz();
-    private:
-        Nodo *raiz;
-        void insereInterno(int chave, int indice, Nodo *cursor, Nodo *filho);
-        void removeInterno(int chave, Nodo *cursor, Nodo *filho);
-        Nodo *achaPai(Nodo *cursor, Nodo *filho);
+        BPTree(std::size_t _grau);
+        ~BPTree();
+        Nodo* getRaiz();
+        Nodo* procuraNodo(Nodo* nodo, int id);
+        Nodo* procuraEmAlcanceBPTree(Nodo* nodo, int id);
+        int procuraEmAlcance(int inicio, int fim, int* resultado);
+        int procuraBPTree(int id);
+        int achaIndice(int* vetor, int data, int tam);
+        int* insereChave(int* vetor_ch, int data, int tam);
+        int* insereIndice(int* vetor_ch, int* vetor_in, int data, int index, int tam);
+        Nodo** insereFilho(Nodo** vetor_filho, Nodo* filho, int tam, int indice);
+        Nodo* insereChaveFilho(Nodo* nodo, int data, int index, Nodo* filho);
+        void inserePai(Nodo* pai, Nodo* filho, int data, int index);
+        void insereBPTree(int data, int index);
+        void limpaBPT(Nodo* cursor);
+        void printaBPT();
+        void printaNodos(Nodo* cursor);
+        void armazenaBPTree(Nodo *cursor, FILE* arq);
+        Nodo* raiz;
+        std::size_t grau;
 };
 
 typedef struct NodoTrie NodoTrie;
@@ -57,22 +66,53 @@ struct NodoTrie {
     int indexmanga;
 };
 
+typedef struct trie_string trie_string;
+
+struct trie_string {
+    char caracter;
+    trie_string* filhos[NTRIE];
+    int eh_folha;
+    std::vector<int> ids;
+};
+
 NodoTrie* cria_NodoTrie(char caracter);
+
+trie_string* cria_trie_string(char caracter);
 
 void free_NodoTrie(NodoTrie* nodo);
 
-NodoTrie* insert_trie(NodoTrie* raiz, std::string name, int index, int anime_ou_manga);
+void free_trie_string(trie_string* raiz);
 
-int busca_trie(NodoTrie* raiz, std::string name, int anime_ou_manga);
+NodoTrie* insert_trie(NodoTrie* raiz, char* name, int index, int anime_ou_manga);
 
-int checa_divergencia(NodoTrie* raiz, std::string name);
+trie_string* insert_trie_string(trie_string* raiz, char* name, int index);
 
-std::string busca_maior_prefixo(NodoTrie* raiz, std::string name);
+int busca_trie(NodoTrie* raiz, char* name, int anime_ou_manga);
 
-int nodo_eh_folha(NodoTrie* raiz, std::string name);
+std::vector<int> busca_trie_string(trie_string* raiz, char* name);
 
-NodoTrie* delete_trie(NodoTrie* raiz, std::string name);
+int checa_divergencia(NodoTrie* raiz, char* name);
+
+char* busca_maior_prefixo(NodoTrie* raiz, char* name);
+
+int nodo_eh_folha(NodoTrie* raiz, char* name);
+
+NodoTrie* delete_trie(NodoTrie* raiz, char* name);
 
 void print_trie(NodoTrie* raiz);
 
-void print_nome(NodoTrie* raiz, std::string name, int anime_ou_manga);
+void print_trie_string(trie_string* raiz);
+
+void print_nome(NodoTrie* raiz, char* name, int anime_ou_manga);
+
+void pega_ids_anime(NodoTrie* raiz, std::vector <int> &ids);
+
+void pega_ids_manga(NodoTrie* raiz, std::vector <int> &ids);
+
+NodoTrie* atualiza_ids_anime(NodoTrie* raiz, char* name, int index);
+
+NodoTrie* atualiza_ids_manga(NodoTrie* raiz, char* name, int index);
+
+void armazenaTRIE(NodoTrie *raiz, FILE *arq);
+
+NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq);

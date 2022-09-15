@@ -3,7 +3,7 @@
 #include <fstream>
 #include "..\include\Registro.h"
 
-// FunÁ„o para abrir arquivos pela stdio.h
+// Fun√ß√£o para abrir arquivos pela stdio.h
 short AbreArquivo(FILE **arq, char *nome_arq, char *modo){
     *arq = fopen(nome_arq, modo);
     if(*arq == NULL){
@@ -14,7 +14,7 @@ short AbreArquivo(FILE **arq, char *nome_arq, char *modo){
     }
 }
 
-// FunÁ„o para saber se o arquivo existe ou n„o
+// Fun√ß√£o para saber se o arquivo existe ou n√£o
 short ArquivoExiste(std::string name){
     FILE *file = fopen(name.c_str(), "r");
     if(file){
@@ -26,7 +26,7 @@ short ArquivoExiste(std::string name){
     }
 }
 
-// FunÁ„o que lÍ CSVs e cria arquivos binarios
+// Fun√ß√£o que l√™ CSVs e cria arquivos binarios
 void ProcessaArquivoCSV(){
     // Buffers de leitura de linha
     std::ifstream entrada_anime("anime.csv");
@@ -47,12 +47,12 @@ void ProcessaArquivoCSV(){
         dados_entrada_manga.push_back(reg2);
     }
 
-    /* 2. ApÛs coletar ou extrair os dados, o programa dever· usar arquivos bin·rios prÛprios que armazenar„o todos os dados, independentes dos arquivos originais.
-          Tais arquivos poder„o ser organizados tanto de forma sequencial, quanto serial. PorÈm È obrigatÛrio que sejam implementados Ìndices de acesso que auxiliem
+    /* 2. Ap√≥s coletar ou extrair os dados, o programa dever√° usar arquivos bin√°rios pr√≥prios que armazenar√£o todos os dados, independentes dos arquivos originais.
+          Tais arquivos poder√£o ser organizados tanto de forma sequencial, quanto serial. Por√©m √© obrigat√≥rio que sejam implementados √≠ndices de acesso que auxiliem
           na consulta a esses dados. */
 
-    // CriaÁ„o das ·rvores B+
-    BPTree bpt_anime, bpt_manga;
+    // Cria√ß√£o das √°rvores B+
+    BPTree bpt_anime(GRAU), bpt_manga(GRAU);
     for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
         bpt_anime.insereBPTree(dados_entrada_anime[i].id, i);
     }
@@ -60,7 +60,30 @@ void ProcessaArquivoCSV(){
         bpt_manga.insereBPTree(dados_entrada_manga[i].id, i);
     }
 
-    // ManipulaÁ„o de arquivos bin·rios
+    // Criacao da arvore TRIE
+    NodoTrie* raiztrie = cria_NodoTrie('\0');
+    for (unsigned long long int i = 0; i < dados_entrada_anime.size(); i++)
+    {
+        char* nome = (char*) calloc (strlen(dados_entrada_anime[i].name) + 1, sizeof(char));
+        for (unsigned int j = 0; j < strlen(dados_entrada_anime[i].name); j++)
+        {
+            nome[j] = dados_entrada_anime[i].name[j];
+        }
+        raiztrie = insert_trie(raiztrie, nome, i, ANIME);
+        //free(nome);
+    }
+    for (unsigned long long int i = 0; i < dados_entrada_manga.size(); i++)
+    {
+        char* nome = (char*) calloc (strlen(dados_entrada_manga[i].title) + 1, sizeof(char));
+        for (unsigned int j = 0; j < strlen(dados_entrada_manga[i].title); j++)
+        {
+            nome[j] = dados_entrada_manga[i].title[j];
+        }
+        raiztrie = insert_trie(raiztrie, nome, i, MANGA);
+        //free(nome);
+    }
+
+    // Manipula√ß√£o de arquivos bin√°rios
     std::ofstream bin_anime, bin_manga;
     bin_anime.open("anime.bin", std::ios::binary);
     bin_manga.open("manga.bin", std::ios::binary);
@@ -81,557 +104,403 @@ void ProcessaArquivoCSV(){
     AbreArquivo(&bin_bpt_manga, bpt_manga_arq, writeb);
     bpt_manga.armazenaBPTree(bpt_manga.getRaiz(), bin_bpt_manga);
     fclose(bin_bpt_manga);
+
+    char bin_trie_arq[] = "trie.bin";
+    FILE *bin_trie = NULL;
+    AbreArquivo(&bin_trie, bin_trie_arq, writeb);
+    armazenaTRIE(raiztrie, bin_trie);
+    fclose(bin_trie);
 }
 
-// Construtor para nodos da ·rvore B+ Tree
-Nodo::Nodo(){
-    chaves = new int[MAX];
-    index = new int[MAX];
-    pChaves = new Nodo *[MAX + 1];
+Nodo::Nodo(std::size_t _grau){ // Construtor de Nodo
+    this->ehFolha = false;
+    this->grau = _grau;
+    this->numChaves = 0;
+    int* _chave = new int[grau - 1];
+    int* _indice = new int[grau - 1];
+    for(int i = 0; i < (grau - 1); i++){
+        _chave[i] = 0;
+        _indice[i] = 0;
+    }
+    this->chave = _chave;
+    this->indice = _indice;
+    Nodo** _filhos = new Nodo*[grau];
+    for(int i=0; i<grau; i++){
+        _filhos[i] = nullptr;
+    }
+    this->filhos = _filhos;
+    this->pai = nullptr;
 }
 
-// Construtor para a ·rvore B+ Tree
-BPTree::BPTree(){
-    raiz = NULL;
+BPTree::BPTree(std::size_t _grau){ // Construtor de √°rvore B+
+    this->raiz = nullptr;
+    this->grau = _grau;
 }
 
-// Procura na ·rvore B+
-int BPTree::procuraBPTree(int chave){
-    if(raiz == NULL){ // Se ·rvore for vazia, devolve -1
-        return -1;
+BPTree::~BPTree(){ // Destrutor
+    limpaBPT(this->raiz);
+}
+
+Nodo* BPTree::getRaiz(){
+    return this->raiz;
+}
+
+Nodo* BPTree::procuraNodo(Nodo* nodo, int id){
+    if(nodo == nullptr){ // Se raiz √© nula, devolve NULL
+        return nullptr;
     }
     else{
-        Nodo *cursor = raiz;
-        while(cursor->ehFolha == false){
+        Nodo* cursor = nodo;
+        while(!cursor->ehFolha){
             for(int i = 0; i < cursor->numChaves; i++){
-                if(chave < cursor->chaves[i]){
-                    cursor = cursor->pChaves[i];
-                    break;
-                }
-                if (i == (cursor->numChaves - 1)){
-                    cursor = cursor->pChaves[i + 1];
-                    break;
-                }
-            }
-        }
-        for(int i = 0; i < cursor->numChaves; i++){
-            if(cursor->chaves[i] == chave){
-                return cursor->index[i]; // Se achar, devolve o Ìndice
-            }
-        }
-        return -1; // Se n„o achar, devolve -1
-    }
-}
-
-// InserÁ„o na ·rvore B+
-void BPTree::insereBPTree(int chave, int indice){
-    if (raiz == NULL){ // Se a ·rvore for vazia, insere na raiz
-        raiz = new Nodo;
-        raiz->chaves[0] = chave;
-        raiz->index[0] = indice;
-        raiz->ehFolha = true;
-        raiz->numChaves = 1;
-    }
-    else{ // Se a ·rvore n„o for vazia
-        Nodo *cursor = raiz;
-        Nodo *pai;
-        while(cursor->ehFolha == false){
-            pai = cursor;
-            for(int i = 0; i < cursor->numChaves; i++){
-                if(chave < cursor->chaves[i]){
-                    cursor = cursor->pChaves[i];
-                    break;
-                }
-                if (i == cursor->numChaves - 1) {
-                    cursor = cursor->pChaves[i + 1];
-                    break;
-                }
-            }
-        }
-        if(cursor->numChaves < MAX){ // Se o nodo ainda n„o estiver cheio
-            int i = 0;
-            while((chave > cursor->chaves[i]) && (i < cursor->numChaves)){
-                i++;
-            }
-            for(int j = cursor->numChaves; j > i; j--){
-                cursor->chaves[j] = cursor->chaves[j - 1];
-                cursor->index[j] = cursor->index[j - 1];
-            }
-            cursor->chaves[i] = chave;
-            cursor->index[i] = indice;
-            cursor->numChaves++;
-            cursor->pChaves[cursor->numChaves] = cursor->pChaves[cursor->numChaves - 1];
-            cursor->pChaves[cursor->numChaves - 1] = NULL;
-        }
-        else{ // Se o nodo estiver cheio
-                /*
-            std::cout << "Cursor:" << "\n"
-            << "Indices = " << cursor->index[0] << "   " << cursor->index[1] << "   "  << cursor->index[2] << "\n"
-            << "Chaves = " << cursor->chaves[0] << "   "  << cursor->chaves[1] << "   "  << cursor->chaves[2] << "\n"
-            << "NumFilhos = " << cursor->numChaves << "    ehFolha = " << cursor->ehFolha << std::endl;
-            */
-            Nodo *n_folha = new Nodo;
-            int buffer_ch[MAX + 1];
-            int buffer_in[MAX + 1];
-            for(int i = 0; i < MAX; i++){
-                buffer_ch[i] = cursor->chaves[i];
-                buffer_in[i] = cursor->index[i];
-            }
-            int i = 0, j;
-            while((chave > buffer_ch[i]) && (i < MAX)){
-                i++;
-            }
-            for (int j = MAX; j > i; j--){
-                buffer_ch[j] = buffer_ch[j - 1];
-                buffer_in[j] = buffer_in[j - 1];
-            }
-            buffer_ch[i] = chave;
-            buffer_in[i] = indice;
-            n_folha->ehFolha = true;
-            cursor->numChaves = (MAX + 1) / 2;
-            n_folha->numChaves = MAX + 1 - (MAX + 1) / 2;
-            cursor->pChaves[cursor->numChaves] = n_folha;
-            n_folha->pChaves[n_folha->numChaves] = cursor->pChaves[MAX];
-            cursor->pChaves[MAX] = NULL;
-            for(i = 0; i < cursor->numChaves; i++){
-                cursor->chaves[i] = buffer_ch[i];
-                cursor->index[i] = buffer_in[i];
-            }
-            for(i = 0, j = cursor->numChaves; i < n_folha->numChaves; i++, j++){
-                n_folha->chaves[i] = buffer_ch[j];
-                n_folha->index[i] = buffer_in[j];
-            }
-            /*
-            std::cout << "Cursor:" << "\n"
-            << "Indices = " << cursor->index[0] << "   " << cursor->index[1] << "   "  << cursor->index[2] << "\n"
-            << "Chaves = " << cursor->chaves[0] << "   "  << cursor->chaves[1] << "   "  << cursor->chaves[2] << "\n"
-            << "NumFilhos = " << cursor->numChaves << "    ehFolha = " << cursor->ehFolha << std::endl;
-            std::cout << "N_folha:" << "\n"
-            << "Indices = " << n_folha->index[0] << "   " << n_folha->index[1] << "   "  << n_folha->index[2] << "\n"
-            << "Chaves = " << n_folha->chaves[0] << "   "  << n_folha->chaves[1] << "   "  << n_folha->chaves[2] << "\n"
-            << "NumFilhos = " << n_folha->numChaves << "    ehFolha = " << n_folha->ehFolha << std::endl; */
-            if(cursor == raiz){
-                Nodo *n_raiz = new Nodo;
-                n_raiz->chaves[0] = n_folha->chaves[0];
-                n_raiz->index[0] = n_folha->index[0];
-                n_raiz->pChaves[0] = cursor;
-                n_raiz->pChaves[1] = n_folha;
-                n_raiz->ehFolha = false;
-                n_raiz->numChaves = 1;
-                raiz = n_raiz;
-            }
-            else{
-                insereInterno(n_folha->chaves[0], n_folha->index[0], pai, n_folha);
-            }
-        }
-    }
-}
-
-// FunÁ„o recursiva auxiliar de inserÁ„o
-void BPTree::insereInterno(int chave, int indice, Nodo *cursor, Nodo *filho){
-    /*
-    std::cout << "Cursor:" << "\n"
-        << "Indices = " << cursor->index[0] << "   " << cursor->index[1] << "   "  << cursor->index[2] << "\n"
-        << "Chaves = " << cursor->chaves[0] << "   "  << cursor->chaves[1] << "   "  << cursor->chaves[2] << "\n"
-        << "NumFilhos = " << cursor->numChaves << "    ehFolha = " << cursor->ehFolha << std::endl; */
-    if(cursor->numChaves < MAX){
-        int i = 0;
-        while ((chave > cursor->chaves[i]) && (i < cursor->numChaves)){
-            i++;
-        }
-        for(int j = cursor->numChaves; j > i; j--){
-            cursor->chaves[j] = cursor->chaves[j - 1];
-            cursor->index[j] = cursor->index[j - 1];
-        }
-        for(int j = cursor->numChaves + 1; j > i + 1; j--){
-            cursor->pChaves[j] = cursor->pChaves[j - 1];
-        }
-        cursor->chaves[i] = chave;
-        cursor->index[i] = indice;
-        cursor->numChaves++;
-        cursor->pChaves[i + 1] = filho;
-    }
-    else{
-        Nodo *n_interno = new Nodo;
-        int buffer_ch[MAX + 1];
-        int buffer_in[MAX + 1];
-        Nodo *buffer_ptr[MAX + 2];
-        for (int i = 0; i < MAX; i++){
-            buffer_ch[i] = cursor->chaves[i];
-            buffer_in[i] = cursor->index[i];
-        }
-        for(int i = 0; i < (MAX + 1); i++){
-            buffer_ptr[i] = cursor->pChaves[i];
-        }
-        int i = 0, j;
-        while((chave > buffer_ch[i]) && (i < MAX)){
-            i++;
-        }
-        for(int j = MAX; j > i; j--){
-            buffer_ch[j] = buffer_ch[j - 1];
-            buffer_in[j] = buffer_in[j - 1];
-        }
-        buffer_ch[i] = chave;
-        buffer_in[i] = indice;
-        for(int j = (MAX + 1); j > i + 1; j--){
-            buffer_ptr[j] = buffer_ptr[j - 1];
-        }
-        buffer_ptr[i + 1] = filho;
-        n_interno->ehFolha = false;
-        cursor->numChaves = (MAX + 1) / 2;
-        n_interno->numChaves = MAX - (MAX + 1) / 2;
-        for (i = 0, j = (cursor->numChaves + 1); i < n_interno->numChaves; i++, j++){
-            n_interno->chaves[i] = buffer_ch[j];
-            n_interno->index[i] = buffer_in[j];
-        }
-        for (i = 0, j = (cursor->numChaves + 1); i < (n_interno->numChaves + 1); i++, j++){
-            n_interno->pChaves[i] = buffer_ptr[j];
-        }
-        if(cursor == raiz){
-            Nodo *n_raiz = new Nodo;
-            n_raiz->chaves[0] = cursor->chaves[cursor->numChaves];
-            n_raiz->index[0] = cursor->index[cursor->numChaves];
-            n_raiz->pChaves[0] = cursor;
-            n_raiz->pChaves[1] = n_interno;
-            n_raiz->ehFolha = false;
-            n_raiz->numChaves = 1;
-            raiz = n_raiz;
-        }
-        else{
-            insereInterno(cursor->chaves[cursor->numChaves], cursor->index[cursor->numChaves], achaPai(raiz, cursor), n_interno);
-        }
-    }
-}
-
-// Retorna o pai do nodo
-Nodo *BPTree::achaPai(Nodo *cursor, Nodo *filho){
-    Nodo *pai;
-    if(cursor->ehFolha || (cursor->pChaves[0])->ehFolha){
-        return NULL;
-    }
-    for(int i = 0; i < cursor->numChaves + 1; i++){
-        if(cursor->pChaves[i] == filho){
-            pai = cursor;
-            return pai;
-        }
-        else{
-            pai = achaPai(cursor->pChaves[i], filho);
-            if (pai != NULL){
-                return pai;
-            }
-        }
-    }
-  return pai;
-}
-
-// Remove na ·rvore B+
-void BPTree::removeBPTree(int chave){
-    if(raiz == NULL){
-        return;
-    }
-    else{
-        Nodo *cursor = raiz;
-        Nodo *pai;
-        int irmao_esq, irmao_dir;
-        while(cursor->ehFolha == false){
-            for(int i = 0; i < cursor->numChaves; i++){
-                pai = cursor;
-                irmao_esq = i - 1;
-                irmao_dir = i + 1;
-                if(chave < cursor->chaves[i]){
-                    cursor = cursor->pChaves[i];
+                if(id < cursor->chave[i]){
+                    cursor = cursor->filhos[i];
                     break;
                 }
                 if(i == (cursor->numChaves - 1)){
-                    irmao_esq = i;
-                    irmao_dir = i + 2;
-                    cursor = cursor->pChaves[i + 1];
+                    cursor = cursor->filhos[i + 1];
                     break;
                 }
             }
         }
-        bool achou = false;
-        int pos;
-        for(pos = 0; pos < cursor->numChaves; pos++){
-            if(cursor->chaves[pos] == chave){
-                achou = true;
-                break;
+        for(int i = 0; i < cursor->numChaves; i++){
+            if(cursor->chave[i] == id){
+                return cursor;
             }
         }
-        if(!achou){
-            return;
-        }
-        for(int i = pos; i < cursor->numChaves; i++){
-            cursor->chaves[i] = cursor->chaves[i + 1];
-        }
-        cursor->numChaves--;
-        if(cursor == raiz){
-            for(int i = 0; i < (MAX + 1); i++){
-                cursor->pChaves[i] = NULL;
-            }
-            if(cursor->numChaves == 0){
-                delete[] cursor->chaves;
-                delete[] cursor->index;
-                delete[] cursor->pChaves;
-                delete cursor;
-                raiz = NULL;
-            }
-            return;
-        }
-        cursor->pChaves[cursor->numChaves] = cursor->pChaves[cursor->numChaves + 1];
-        cursor->pChaves[cursor->numChaves + 1] = NULL;
-        if(cursor->numChaves >= ((MAX + 1) / 2)){
-            return;
-        }
-        if(irmao_esq >= 0){
-            Nodo *nodo_esq = pai->pChaves[irmao_esq];
-            if(nodo_esq->numChaves >= ((MAX + 1) / 2 + 1)){
-                for(int i = cursor->numChaves; i > 0; i--){
-                    cursor->chaves[i] = cursor->chaves[i - 1];
-                }
-                cursor->numChaves++;
-                cursor->pChaves[cursor->numChaves] = cursor->pChaves[cursor->numChaves - 1];
-                cursor->pChaves[cursor->numChaves - 1] = NULL;
-                cursor->chaves[0] = nodo_esq->chaves[nodo_esq->numChaves - 1];
-                nodo_esq->numChaves--;
-                nodo_esq->pChaves[nodo_esq->numChaves] = cursor;
-                nodo_esq->pChaves[nodo_esq->numChaves + 1] = NULL;
-                pai->chaves[irmao_esq] = cursor->chaves[0];
-                return;
-            }
-        }
-        if(irmao_dir <= pai->numChaves){
-            Nodo *nodo_dir = pai->pChaves[irmao_dir];
-            if(nodo_dir->numChaves >= ((MAX + 1) / 2 + 1)){
-                cursor->numChaves++;
-                cursor->pChaves[cursor->numChaves] = cursor->pChaves[cursor->numChaves - 1];
-                cursor->pChaves[cursor->numChaves - 1] = NULL;
-                cursor->chaves[cursor->numChaves - 1] = nodo_dir->chaves[0];
-                nodo_dir->numChaves--;
-                nodo_dir->pChaves[nodo_dir->numChaves] = nodo_dir->pChaves[nodo_dir->numChaves + 1];
-                nodo_dir->pChaves[nodo_dir->numChaves + 1] = NULL;
-                for(int i = 0; i < nodo_dir->numChaves; i++){
-                    nodo_dir->chaves[i] = nodo_dir->chaves[i + 1];
-                }
-                pai->chaves[irmao_dir - 1] = nodo_dir->chaves[0];
-                return;
-            }
-        }
-        if(irmao_esq >= 0){
-            Nodo *nodo_esq = pai->pChaves[irmao_esq];
-            for(int i = nodo_esq->numChaves, j = 0; j < cursor->numChaves; i++, j++){
-                nodo_esq->chaves[i] = cursor->chaves[j];
-            }
-            nodo_esq->pChaves[nodo_esq->numChaves] = NULL;
-            nodo_esq->numChaves += cursor->numChaves;
-            nodo_esq->pChaves[nodo_esq->numChaves] = cursor->pChaves[cursor->numChaves];
-            removeInterno(pai->chaves[irmao_esq], pai, cursor);
-            delete[] cursor->chaves;
-            delete[] cursor->index;
-            delete[] cursor->pChaves;
-            delete cursor;
-        }
-        else{
-            if(irmao_dir <= pai->numChaves){
-                Nodo *nodo_dir = pai->pChaves[irmao_dir];
-                for(int i = cursor->numChaves, j = 0; j < nodo_dir->numChaves; i++, j++){
-                    cursor->chaves[i] = nodo_dir->chaves[j];
-                }
-                cursor->pChaves[cursor->numChaves] = NULL;
-                cursor->numChaves += nodo_dir->numChaves;
-                cursor->pChaves[cursor->numChaves] = nodo_dir->pChaves[nodo_dir->numChaves];
-                removeInterno(pai->chaves[irmao_dir - 1], pai, nodo_dir);
-                delete[] nodo_dir->chaves;
-                delete[] nodo_dir->pChaves;
-                delete nodo_dir;
-            }
-        }
+        return nullptr;
     }
 }
 
-// FunÁ„o recursiva auxiliar de remoÁ„o
-void BPTree::removeInterno(int chave, Nodo *cursor, Nodo *filho){
-    if(cursor == raiz){
-        if(cursor->numChaves == 1){
-            if(cursor->pChaves[1] == filho){
-                delete[] filho->chaves;
-                delete[] filho->index;
-                delete[] filho->pChaves;
-                delete filho;
-                raiz = cursor->pChaves[0];
-                delete[] cursor->chaves;
-                delete[] cursor->index;
-                delete[] cursor->pChaves;
-                delete cursor;
-                return;
-            }
-            else{
-                if(cursor->pChaves[0] == filho){
-                    delete[] filho->chaves;
-                    delete[] filho->index;
-                    delete[] filho->pChaves;
-                    delete filho;
-                    raiz = cursor->pChaves[1];
-                    delete[] cursor->chaves;
-                    delete[] cursor->index;
-                    delete[] cursor->pChaves;
-                    delete cursor;
-                    return;
-                }
-            }
-        }
-    }
-    int pos;
-    for(pos = 0; pos < cursor->numChaves; pos++){
-        if(cursor->chaves[pos] == chave){
-            break;
-        }
-    }
-    for(int i = pos; i < cursor->numChaves; i++){
-        cursor->chaves[i] = cursor->chaves[i + 1];
-    }
-    for(pos = 0; pos < (cursor->numChaves + 1); pos++){
-        if(cursor->pChaves[pos] == filho){
-            break;
-        }
-    }
-    for(int i = pos; i < (cursor->numChaves + 1); i++){
-        cursor->pChaves[i] = cursor->pChaves[i + 1];
-    }
-    cursor->numChaves--;
-    if(cursor->numChaves >= ((MAX + 1) / 2 - 1)){
-        return;
-    }
-    if(cursor == raiz){
-        return;
-    }
-    Nodo *pai = achaPai(raiz, cursor);
-    int irmao_esq, irmao_dir;
-    for(pos = 0; pos < (pai->numChaves + 1); pos++){
-        if(pai->pChaves[pos] == cursor){
-            irmao_esq = pos - 1;
-            irmao_dir = pos + 1;
-            break;
-        }
-    }
-    if(irmao_esq >= 0){
-        Nodo *nodo_esq = pai->pChaves[irmao_esq];
-        if(nodo_esq->numChaves >= (MAX + 1) / 2){
-            for(int i = cursor->numChaves; i > 0; i--){
-                cursor->chaves[i] = cursor->chaves[i - 1];
-            }
-            cursor->chaves[0] = pai->chaves[irmao_esq];
-            pai->chaves[irmao_esq] = nodo_esq->chaves[nodo_esq->numChaves - 1];
-            for(int i = (cursor->numChaves + 1); i > 0; i--){
-                cursor->pChaves[i] = cursor->pChaves[i - 1];
-            }
-            cursor->pChaves[0] = nodo_esq->pChaves[nodo_esq->numChaves];
-            cursor->numChaves++;
-            nodo_esq->numChaves--;
-            return;
-        }
-    }
-    if(irmao_dir <= pai->numChaves){
-        Nodo *nodo_dir = pai->pChaves[irmao_dir];
-        if(nodo_dir->numChaves >= ((MAX + 1) / 2)){
-            cursor->chaves[cursor->numChaves] = pai->chaves[pos];
-            pai->chaves[pos] = nodo_dir->chaves[0];
-            for(int i = 0; i < (nodo_dir->numChaves - 1); i++){
-                nodo_dir->chaves[i] = nodo_dir->chaves[i + 1];
-            }
-            cursor->pChaves[cursor->numChaves + 1] = nodo_dir->pChaves[0];
-            for(int i = 0; i < nodo_dir->numChaves; ++i){
-                nodo_dir->pChaves[i] = nodo_dir->pChaves[i + 1];
-            }
-            cursor->numChaves++;
-            nodo_dir->numChaves--;
-            return;
-        }
-    }
-    if(irmao_esq >= 0){
-        Nodo *nodo_esq = pai->pChaves[irmao_esq];
-        nodo_esq->chaves[nodo_esq->numChaves] = pai->chaves[irmao_esq];
-        for(int i = (nodo_esq->numChaves + 1), j = 0; j < cursor->numChaves; j++){
-            nodo_esq->chaves[i] = cursor->chaves[j];
-        }
-        for(int i = (nodo_esq->numChaves + 1), j = 0; j < (cursor->numChaves + 1); j++){
-            nodo_esq->pChaves[i] = cursor->pChaves[j];
-            cursor->pChaves[j] = NULL;
-        }
-        nodo_esq->numChaves += cursor->numChaves + 1;
-        cursor->numChaves = 0;
-        removeInterno(pai->chaves[irmao_esq], pai, cursor);
+Nodo* BPTree::procuraEmAlcanceBPTree(Nodo* nodo, int id){
+    if(nodo == nullptr){
+        return nullptr;
     }
     else{
-        if(irmao_dir <= pai->numChaves){
-            Nodo *nodo_dir = pai->pChaves[irmao_dir];
-            cursor->chaves[cursor->numChaves] = pai->chaves[irmao_dir - 1];
-            for(int i = (cursor->numChaves + 1), j = 0; j < nodo_dir->numChaves; j++){
-                cursor->chaves[i] = nodo_dir->chaves[j];
+        Nodo* cursor = nodo;
+        while(!cursor->ehFolha){
+            for(int i = 0; i < cursor->numChaves; i++){
+                if(id < cursor->chave[i]){
+                    cursor = cursor->filhos[i];
+                    break;
+                }
+                if(i == (cursor->numChaves - 1)){
+                    cursor = cursor->filhos[i + 1];
+                    break;
+                }
             }
-            for(int i = (cursor->numChaves + 1), j = 0; j < (nodo_dir->numChaves + 1); j++){
-                cursor->pChaves[i] = nodo_dir->pChaves[j];
-                nodo_dir->pChaves[j] = NULL;
+        }
+        return cursor;
+    }
+}
+
+int BPTree::procuraEmAlcance(int inicio, int fim, int* resultado){
+    int index = 0;
+    Nodo* nodo_inicio = procuraEmAlcanceBPTree(this->raiz, inicio);
+    Nodo* cursor = nodo_inicio;
+    int temp = cursor->chave[0];
+    while(temp <= fim){
+        if(cursor == nullptr){
+            break;
+        }
+        for(int i = 0; i< cursor->numChaves; i++){
+            temp = cursor->chave[i];
+            if((temp >= inicio) && (temp <= fim)){
+                resultado[index] = temp;
+                index++;
             }
-            cursor->numChaves += nodo_dir->numChaves + 1;
-            nodo_dir->numChaves = 0;
-            removeInterno(pai->chaves[irmao_dir - 1], pai, nodo_dir);
+        }
+        cursor = cursor->filhos[cursor->numChaves];
+    }
+    return index;
+}
+
+int BPTree::procuraBPTree(int id){
+    Nodo* nodo = procuraNodo(this->raiz, id);
+    if(nodo == nullptr){
+        return -1; // Retorna -1, se a chave n√£o est√° contida na B+
+    }
+    else{
+        for(int i = 0; i < nodo->numChaves; i++){
+            if(nodo->chave[i] == id){
+                return (nodo->indice[i]); // Retorna o indice se existe
+            }
         }
     }
 }
 
-// Printa a ·rvore B+ para debug
-void BPTree::display(Nodo *cursor){
-    if(cursor != NULL){
+int BPTree::achaIndice(int* vetor, int data, int tam){
+    int index = 0;
+    for(int i = 0; i < tam; i++){
+        if(data < vetor[i]){
+            index = i;
+            break;
+        }
+        if(i == (tam - 1)){
+            index = tam;
+            break;
+        }
+    }
+    return index;
+}
+
+int* BPTree::insereChave(int* vetor_ch, int data, int tam){
+    int indice = 0;
+    for(int i = 0; i < tam; i++){
+        if(data < vetor_ch[i]){
+            indice = i;
+            break;
+        }
+        if(i == (tam-1)){
+            indice = tam;
+            break;
+        }
+    }
+    for(int i = tam; i > indice; i--){
+        vetor_ch[i] = vetor_ch[i - 1];
+    }
+    vetor_ch[indice] = data;
+    return vetor_ch;
+}
+
+int* BPTree::insereIndice(int* vetor_ch, int* vetor_in, int data, int index, int tam){
+    int indice = 0;
+    for(int i = 0; i < tam; i++){
+        if(data < vetor_ch[i]){
+            indice = i;
+            break;
+        }
+        if(i == (tam - 1)){
+            indice = tam;
+            break;
+        }
+    }
+    for(int i = tam; i > indice; i--){
+        vetor_in[i] = vetor_in[i - 1];
+    }
+    vetor_in[indice] = index;
+    return vetor_in;
+}
+
+Nodo** BPTree::insereFilho(Nodo** vetor_filho, Nodo* filho, int tam, int indice){
+    for(int i = tam; i > indice; i--){
+        vetor_filho[i] = vetor_filho[i - 1];
+    }
+    vetor_filho[indice] = filho;
+    return vetor_filho;
+}
+
+Nodo* BPTree::insereChaveFilho(Nodo* nodo, int data, int index, Nodo* filho){
+    int chave_index = 0;
+    int filho_index = 0;
+    for(int i = 0; i < nodo->numChaves; i++){
+        if(data < nodo->chave[i]){
+            chave_index = i;
+            filho_index = i + 1;
+            break;
+        }
+        if(i == (nodo->numChaves - 1)){
+            chave_index = nodo->numChaves;
+            filho_index = nodo->numChaves + 1;
+            break;
+        }
+    }
+    for(int i = nodo->numChaves; i > chave_index; i--){
+        nodo->chave[i] = nodo->chave[i - 1];
+        nodo->indice[i] = nodo->indice[i - 1];
+    }
+    for(int i = (nodo->numChaves + 1); i > filho_index; i--){
+        nodo->filhos[i] = nodo->filhos[i - 1];
+    }
+    nodo->chave[chave_index] = data;
+    nodo->indice[chave_index] = index;
+    nodo->filhos[filho_index] = filho;
+    return nodo;
+}
+
+void BPTree::inserePai(Nodo* pai, Nodo* filho, int data, int index){
+    Nodo* cursor = pai;
+    if(cursor->numChaves < (this->grau - 1)){
+        cursor = insereChaveFilho(cursor, data, index, filho);
+        cursor->numChaves++;
+    }
+    else{
+        auto* n_nodo = new Nodo(this->grau);
+        n_nodo->pai = cursor->pai;
+        int* buffer_ch = new int[cursor->numChaves + 1];
+        int* buffer_in = new int[cursor->numChaves + 1];
         for(int i = 0; i < cursor->numChaves; i++){
-            std::cout << cursor->chaves[i] << "." << cursor->index[i] << " ";
+            buffer_ch[i] = cursor->chave[i];
+            buffer_in[i] = cursor->indice[i];
+        }
+        buffer_in = insereIndice(buffer_ch, buffer_in, data, index, cursor->numChaves);
+        buffer_ch = insereChave(buffer_ch, data, cursor->numChaves);
+        auto** buffer_filho = new Nodo*[cursor->numChaves + 2];
+        for(int i = 0; i < (cursor->numChaves + 1); i++){
+            buffer_filho[i] = cursor->filhos[i];
+        }
+        buffer_filho[cursor->numChaves + 1] = nullptr;
+        buffer_filho = insereFilho(buffer_filho, filho, (cursor->numChaves + 1), achaIndice(buffer_ch, data, (cursor->numChaves + 1)));
+        cursor->numChaves = (this->grau) / 2;
+        if((this->grau) % 2 == 0){
+            n_nodo->numChaves = (this->grau) / 2 - 1;
+        }
+        else{
+            n_nodo->numChaves = (this->grau) / 2;
+        }
+        for(int i = 0; i < cursor->numChaves; i++){
+            cursor->chave[i] = buffer_ch[i];
+            cursor->indice[i] = buffer_in[i];
+            cursor->filhos[i] = buffer_filho[i];
+        }
+        cursor->filhos[cursor->numChaves] = buffer_filho[cursor->numChaves];
+        for(int i = 0; i < n_nodo->numChaves; i++){
+            n_nodo->chave[i] = buffer_ch[cursor->numChaves + i +1];
+            n_nodo->indice[i] = buffer_in[cursor->numChaves + i +1];
+            n_nodo->filhos[i] = buffer_filho[cursor->numChaves + i + 1];
+            n_nodo->filhos[i]->pai = n_nodo;
+        }
+        n_nodo->filhos[n_nodo->numChaves] = buffer_filho[cursor->numChaves + n_nodo->numChaves + 1];
+        n_nodo->filhos[n_nodo->numChaves]->pai = n_nodo;
+        int ch_pai = buffer_ch[this->grau / 2];
+        int in_pai = buffer_in[this->grau / 2];
+        delete[] buffer_ch;
+        delete[] buffer_in;
+        delete[] buffer_filho;
+        if(cursor->pai == nullptr){
+            auto* n_pai = new Nodo(this->grau);
+            cursor->pai = n_pai;
+            n_nodo->pai = n_pai;
+            n_pai->chave[0] = ch_pai;
+            n_pai->indice[0] = in_pai;
+            n_pai->numChaves++;
+            n_pai->filhos[0] = cursor;
+            n_pai->filhos[1] = n_nodo;
+            this->raiz = n_pai;
+        }
+        else{
+            inserePai(cursor->pai, n_nodo, ch_pai, in_pai);
+        }
+    }
+}
+
+void BPTree::insereBPTree(int data, int index){
+    if(this->raiz == nullptr){
+        this->raiz = new Nodo(this->grau);
+        this->raiz->ehFolha = true;
+        this->raiz->chave[0] = data;
+        this->raiz->indice[0] = index;
+        this->raiz->numChaves = 1;
+    }
+    else{
+        Nodo* cursor = this->raiz;
+        cursor = procuraEmAlcanceBPTree(cursor, data);
+        if(cursor->numChaves < (this->grau - 1)){
+            cursor->indice = insereIndice(cursor->chave, cursor->indice, data, index, cursor->numChaves);
+            cursor->chave = insereChave(cursor->chave, data, cursor->numChaves);
+            cursor->numChaves++;
+            cursor->filhos[cursor->numChaves] = cursor->filhos[cursor->numChaves - 1];
+            cursor->filhos[cursor->numChaves - 1] = nullptr;
+        }
+        else{
+            auto* n_nodo = new Nodo(this->grau);
+            n_nodo->ehFolha = true;
+            n_nodo->pai = cursor->pai;
+            int* buffer_ch = new int[cursor->numChaves + 1];
+            int* buffer_in = new int[cursor->numChaves + 1];
+            for(int i = 0; i < cursor->numChaves; i++){
+                buffer_ch[i] = cursor->chave[i];
+                buffer_in[i] = cursor->indice[i];
+            }
+            buffer_in = insereIndice(buffer_ch, buffer_in, data, index, cursor->numChaves);
+            buffer_ch = insereChave(buffer_ch, data, cursor->numChaves);
+            cursor->numChaves = (this->grau) / 2;
+            if((this->grau) % 2 == 0){
+                n_nodo->numChaves = (this->grau) / 2;
+            }
+            else{
+                n_nodo->numChaves = (this->grau) / 2 + 1;
+            }
+            for(int i = 0; i < cursor->numChaves; i++){
+                cursor->chave[i] = buffer_ch[i];
+                cursor->indice[i] = buffer_in[i];
+            }
+            for(int i = 0; i < n_nodo->numChaves; i++){
+                n_nodo->chave[i] = buffer_ch[cursor->numChaves + i];
+                n_nodo->indice[i] = buffer_in[cursor->numChaves + i];
+            }
+            cursor->filhos[cursor->numChaves] = n_nodo;
+            n_nodo->filhos[n_nodo->numChaves] = cursor->filhos[this->grau - 1];
+            cursor->filhos[this->grau - 1] = nullptr;
+            delete[] buffer_ch;
+            delete[] buffer_in;
+            int ch_pai = n_nodo->chave[0];
+            int in_pai = n_nodo->indice[0];
+            if(cursor->pai == nullptr){
+                auto* n_pai = new Nodo(this->grau);
+                cursor->pai = n_pai;
+                n_nodo->pai = n_pai;
+                n_pai->chave[0] = ch_pai;
+                n_pai->indice[0] = in_pai;
+                n_pai->numChaves++;
+                n_pai->filhos[0] = cursor;
+                n_pai->filhos[1] = n_nodo;
+                this->raiz = n_pai;
+            }
+            else{
+                inserePai(cursor->pai, n_nodo, ch_pai, in_pai);
+            }
+        }
+    }
+}
+
+void BPTree::limpaBPT(Nodo* cursor){
+    if(cursor != nullptr){
+        if(!cursor->ehFolha){
+            for(int i=0; i <= cursor->numChaves; i++){
+                limpaBPT(cursor->filhos[i]);
+            }
+        }
+        delete[] cursor->chave;
+        delete[] cursor->indice;
+        delete[] cursor->filhos;
+        delete cursor;
+    }
+}
+
+void BPTree::printaBPT(){
+    printaNodos(this->raiz);
+}
+
+void BPTree::printaNodos(Nodo* cursor){
+    if(cursor != NULL){
+        for(int i = 0; i < cursor->numChaves; ++i){
+            std::cout << cursor->chave[i] << "." << cursor->indice[i] << " ";
         }
         std::cout << "\n";
-        if(cursor->ehFolha != true){
-            for(int i = 0; i < (cursor->numChaves + 1); i++){
-                display(cursor->pChaves[i]);
+        if(!cursor->ehFolha){
+            for(int i = 0; i < (cursor->numChaves + 1); ++i){
+                printaNodos(cursor->filhos[i]);
             }
         }
     }
 }
 
-// Printa a ·rvore B+ para debug
-void BPTree::displayFolhas(Nodo *cursor){
-    if(cursor != NULL){
-        for(int i = 0; i < cursor->numChaves; i++){
-            if(cursor->ehFolha == true){
-                std::cout << cursor->chaves[i] << "." << cursor->index[i] << " ";
-            }
-        }
-        std::cout << "\n";
-        if(cursor->ehFolha != true){
-            for(int i = 0; i < (cursor->numChaves + 1); i++){
-                display(cursor->pChaves[i]);
-            }
-        }
-    }
-}
-
-// Devolve a raiz da ·rvore B+
-Nodo *BPTree::getRaiz(){
-    return raiz;
-}
-
-// FunÁ„o para armazenar ·rvore B+ em bin·rio
+// Fun√ß√£o para armazenar √°rvore B+ em bin√°rio
 void BPTree::armazenaBPTree(Nodo *cursor, FILE* arq){
     int aux1, aux2;
     if(cursor != NULL){
         for(int i = 0; i < cursor->numChaves; i++){
             if(cursor->ehFolha == true){
-                aux1 = cursor->chaves[i];
-                aux2 = cursor->index[i];
+                aux1 = cursor->chave[i];
+                aux2 = cursor->indice[i];
                 fwrite(&aux1, sizeof(aux1), 1, arq);
                 fwrite(&aux2, sizeof(aux2), 1, arq);
             }
         }
         if(cursor->ehFolha != true){
             for(int i = 0; i < (cursor->numChaves + 1); i++){
-                armazenaBPTree(cursor->pChaves[i], arq);
+                armazenaBPTree(cursor->filhos[i], arq);
             }
         }
     }
@@ -649,6 +518,17 @@ NodoTrie* cria_NodoTrie(char caracter) {
     return nodo;
 }
 
+trie_string* cria_trie_string(char caracter)
+{
+    trie_string* nodo = (trie_string*) calloc (1, sizeof(trie_string));
+    for (int i=0; i<NTRIE; i++)
+        nodo->filhos[i] = NULL;
+    nodo->eh_folha = 0;
+    nodo->caracter = caracter;
+    nodo->ids = {};
+    return nodo;
+}
+
 void free_NodoTrie(NodoTrie* nodo) {
     // Desaloca  a memoria ocupada pelo nodo e todos os seus filhos
     for(int i=0; i<NTRIE; i++) {
@@ -659,7 +539,19 @@ void free_NodoTrie(NodoTrie* nodo) {
     free(nodo);
 }
 
-NodoTrie* insert_trie(NodoTrie* raiz, std::string name, int index, int anime_ou_manga) {
+void free_trie_string(trie_string* raiz)
+{
+    for (int i=0; i<NTRIE; i++)
+    {
+        if (raiz->filhos[i] != NULL)
+        {
+            free_trie_string(raiz->filhos[i]);
+        }
+    }
+    free(raiz);
+}
+
+NodoTrie* insert_trie(NodoTrie* raiz, char* name, int index, int anime_ou_manga) {
     // Insere o nome do manga ou do anime numa arvore TRIE
     NodoTrie* temp = raiz;
     for (int i=0; name[i] != '\0'; i++) {
@@ -691,7 +583,45 @@ NodoTrie* insert_trie(NodoTrie* raiz, std::string name, int index, int anime_ou_
     return raiz;
 }
 
-int busca_trie(NodoTrie* raiz, std::string name, int anime_ou_manga)
+trie_string* insert_trie_string(trie_string* raiz, char* name, int index)
+{
+    // Insere o nome do manga ou do anime numa arvore TRIE
+    trie_string* temp = raiz;
+    int i = 0;
+    while (name[i] != '\0')
+    {
+        while (name[i] != ';' && name[i] != '\0')
+        {
+            if (name[i] <= 'Z' && name[i] >= 'A')
+            {
+                name[i] += 32;
+            }
+            if(name[i] <= 'z' && name[i] >= 'a'){
+                // Pega a posicao em que a letra sera filha do nodo
+                int j = name[i] - 'a';
+                if (temp->filhos[j] == NULL) {
+                    // Se o filho ainda nao existe, cria o filho
+                    temp->filhos[j] = cria_trie_string(name[i]);
+                }
+                temp = temp->filhos[j];
+            }
+            i++;
+        }
+        if (name[i] == ';')
+        {
+            temp->eh_folha = 1;
+            temp->ids.push_back(index);
+            i++;
+            temp = raiz;
+        }
+    }
+
+    temp->eh_folha = 1;
+    temp->ids.push_back(index);
+    return raiz;
+}
+
+int busca_trie(NodoTrie* raiz, char* name, int anime_ou_manga)
 {
     // Procura pelo nome do anime/manga na TRIE
     NodoTrie* temp = raiz;
@@ -724,11 +654,36 @@ int busca_trie(NodoTrie* raiz, std::string name, int anime_ou_manga)
     return -1;
 }
 
-int checa_divergencia(NodoTrie* raiz, std::string name) {
+std::vector<int> busca_trie_string(trie_string* raiz, char* name)
+{
+    trie_string* temp = raiz;
+
+    for(int i=0; name[i]!='\0'; i++)
+    {
+        if (name[i] <= 'Z' && name[i] >= 'A')
+        {
+            name[i] += 32;
+        }
+        if(name[i] <= 'z' && name[i] >= 'a'){
+            int j = name[i] - 'a';
+            if (temp->filhos[j] == NULL){
+                return {};
+            }
+            temp = temp->filhos[j];
+        }
+    }
+    if (temp != NULL && temp->eh_folha == 1)
+    {
+        return temp->ids;
+    }
+    return {};
+}
+
+int checa_divergencia(NodoTrie* raiz, char* name) {
     // Checa se a arvore segue adiante apos o ultimo caracter do nome
     // e retorna a maior posicao dentro do nome em que essa ramificacao ocorre
     NodoTrie* temp = raiz;
-    int tam = name.size();
+    int tam = strlen(name);
     if (tam == 0)
         return 0;
     // O retorno eh o maior indice onde a ramificacao ocorre
@@ -741,7 +696,7 @@ int checa_divergencia(NodoTrie* raiz, std::string name) {
         if(name[i] <= 'z' && name[i] >= 'a'){
             int j = name[i] - 'a';
             if (temp->filhos[j]) {
-                // Se temp->filhos¥[j] existe
+                // Se temp->filhos¬¥[j] existe
                 // eh necessario checar se existe um filho seu tambem
                 // em que ha uma possivel ramificacao
                 for (int k=0; j<NTRIE; k++) {
@@ -759,7 +714,7 @@ int checa_divergencia(NodoTrie* raiz, std::string name) {
     return ultimo_indice;
 }
 
-std::string busca_maior_prefixo(NodoTrie* raiz, std::string name) {
+char* busca_maior_prefixo(NodoTrie* raiz, char* name) {
     // Encontra o maior prefixo que o nome tem em comum com outros nomes
     if (name[0] == '\0')
         return NULL;
@@ -767,18 +722,26 @@ std::string busca_maior_prefixo(NodoTrie* raiz, std::string name) {
     // Inicialmente, eh considerado que o maior prefixo eh o proprio nome,
     // e de tras pra frente vai sendo procurado um ponto em que ha um prefixo
     // em comum
-    std::string maior_prefixo = name;
+    int tam = strlen(name);
+    char* maior_prefixo = (char*) calloc (tam + 1, sizeof(char));
+
+    for (int i = 0; name[i] != '\0'; i++)
+    {
+        maior_prefixo[i] = name[i];
+    }
+    maior_prefixo[tam] = '\0';
 
     int ramificacao_index  = checa_divergencia(raiz, maior_prefixo) - 1;
     if (ramificacao_index >= 0) {
         // Houve ramificacao, eh necessario atualizar o valor de maior_prefixo
         // para ser do tamanho ate onde houve a ramificacao
         maior_prefixo[ramificacao_index] = '\0';
+        maior_prefixo = (char*) realloc (maior_prefixo, (ramificacao_index + 1) * sizeof(char));
     }
     return maior_prefixo;
 }
 
-int nodo_eh_folha(NodoTrie* raiz, std::string name) {
+int nodo_eh_folha(NodoTrie* raiz, char* name) {
     // Checa se o nome na raiz passada eh um nodo folha
     NodoTrie* temp = raiz;
     for (int i=0; name[i]; i++) {
@@ -796,7 +759,7 @@ int nodo_eh_folha(NodoTrie* raiz, std::string name) {
     return temp->eh_folha;
 }
 
-NodoTrie* delete_trie(NodoTrie* raiz, std::string name) {
+NodoTrie* delete_trie(NodoTrie* raiz, char* name) {
     // Deleta o nome passado de argumento da arvore TRIE
     if (!raiz)
         return NULL;
@@ -808,9 +771,10 @@ NodoTrie* delete_trie(NodoTrie* raiz, std::string name) {
     }
     NodoTrie* temp = raiz;
     // Encontra a string maior_prefixo que nao eh o nome atual
-    std::string maior_prefixo = busca_maior_prefixo(raiz, name);
+    char* maior_prefixo = busca_maior_prefixo(raiz, name);
 
     if (maior_prefixo[0] == '\0') {
+        free(maior_prefixo);
         return raiz;
     }
 
@@ -828,13 +792,14 @@ NodoTrie* delete_trie(NodoTrie* raiz, std::string name) {
             }
             else {
                 // O nodo nao foi encontrado, simplesmente retorna
+                free(maior_prefixo);
                 return raiz;
             }
         }
     }
     // O nodo mais profundo em comum foi encontrado, agora,
     // a sequencia a partir dele ate o nome sera deletada
-    int len = name.size();
+    int len = strlen(name);
     for (; i < len; i++) {
         if (name[i] <= 'Z' && name[i] >= 'A')
         {
@@ -851,6 +816,7 @@ NodoTrie* delete_trie(NodoTrie* raiz, std::string name) {
             }
         }
     }
+    free(maior_prefixo);
     return raiz;
 }
 
@@ -865,7 +831,29 @@ void print_trie(NodoTrie* raiz) {
     }
 }
 
-void print_nome(NodoTrie* raiz, std::string name, int anime_ou_manga) {
+void print_trie_string(trie_string* raiz)
+{
+    // Printa os nodos de uma arvore TRIE
+    if (!raiz)
+        return;
+    trie_string* temp = raiz;
+    printf("%c -> ", temp->caracter);
+
+    if (temp->eh_folha)
+    {
+        std::cout << std::endl;
+        for (unsigned int i = 0; i < temp->ids.size(); i++)
+        {
+            std::cout << temp->ids[i] << " ";
+        }
+    }
+
+    for (int i=0; i<NTRIE; i++) {
+        print_trie_string(temp->filhos[i]);
+    }
+}
+
+void print_nome(NodoTrie* raiz, char* name, int anime_ou_manga) {
     // Procura por um determinado nome em uma arvore TRIE
     std::cout << "Searching for " << name << " ";
     if (busca_trie(raiz, name, anime_ou_manga) == -1)
@@ -874,3 +862,128 @@ void print_nome(NodoTrie* raiz, std::string name, int anime_ou_manga) {
         printf("Found!\n");
 }
 
+void pega_ids_anime(NodoTrie* raiz, std::vector <int> &ids) {
+    // Printa os nodos de uma arvore TRIE
+    if (!raiz)
+        return;
+
+    NodoTrie* temp = raiz;
+    if (temp->eh_folha)
+    {
+        ids.push_back(temp->indexanime);
+    }
+    for (int i=0; i<NTRIE; i++) {
+        pega_ids_anime(temp->filhos[i], ids);
+    }
+}
+
+void pega_ids_manga(NodoTrie* raiz, std::vector <int> &ids) {
+    // Printa os nodos de uma arvore TRIE
+    if (!raiz)
+        return;
+
+    NodoTrie* temp = raiz;
+    if (temp->eh_folha)
+    {
+        ids.push_back(temp->indexmanga);
+    }
+    for (int i=0; i<NTRIE; i++) {
+        pega_ids_manga(temp->filhos[i], ids);
+    }
+}
+
+NodoTrie* atualiza_ids_anime(NodoTrie* raiz, char* name, int index)
+{
+    NodoTrie* temp = raiz;
+    for (int i=0; name[i] != '\0'; i++) {
+        if (name[i] <= 'Z' && name[i] >= 'A')
+        {
+            name[i] += 32;
+        }
+        if(name[i] <= 'z' && name[i] >= 'a'){
+            int j = name[i] - 'a';
+            temp = temp->filhos[j];
+        }
+    }
+    // Temp eh folha
+    temp->indexanime = index;
+    return raiz;
+}
+
+NodoTrie* atualiza_ids_manga(NodoTrie* raiz, char* name, int index)
+{
+    NodoTrie* temp = raiz;
+    for (int i=0; name[i] != '\0'; i++) {
+        if (name[i] <= 'Z' && name[i] >= 'A')
+        {
+            name[i] += 32;
+        }
+        if(name[i] <= 'z' && name[i] >= 'a'){
+            int j = name[i] - 'a';
+            temp = temp->filhos[j];
+        }
+    }
+    // Temp eh folha
+    temp->indexmanga = index;
+    return raiz;
+}
+
+void armazenaTRIE(NodoTrie* raiz, FILE* arq)
+{
+    char caracter;
+    int folha, idxanime, idxmanga;
+    NodoTrie* filhos[NTRIE];
+    NodoTrie* temp = raiz;
+    if (temp != NULL)
+    {
+        caracter = temp->caracter;
+        folha = temp->eh_folha;
+        idxanime = temp->indexanime;
+        idxmanga = temp->indexmanga;
+        for (int i = 0; i < NTRIE; i++)
+        {
+            filhos[i] = temp->filhos[i];
+        }
+        fwrite(&caracter, sizeof(caracter), 1, arq);
+        fwrite(&folha, sizeof(folha), 1, arq);
+        fwrite(&idxanime, sizeof(idxanime), 1, arq);
+        fwrite(&idxmanga, sizeof(idxmanga), 1, arq);
+        for (int i = 0; i < NTRIE; i++)
+        {
+            fwrite(&filhos[i], sizeof(filhos[i]), 1, arq);
+            armazenaTRIE(filhos[i], arq);
+        }
+    }
+}
+
+NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq)
+{
+    char buffer_caracter;
+    int buffer_folha, buffer_idxanime, buffer_idxmanga;
+    NodoTrie* buffer_filhos[NTRIE];
+
+    NodoTrie* temp = raiz;
+    NodoTrie* buffer;
+
+    fread(&buffer_caracter, sizeof(buffer_caracter), 1, arq);
+    fread(&buffer_folha, sizeof(buffer_folha), 1, arq);
+    fread(&buffer_idxanime, sizeof(buffer_idxanime), 1, arq);
+    fread(&buffer_idxmanga, sizeof(buffer_idxmanga), 1, arq);
+
+    temp->caracter = buffer_caracter;
+    temp->eh_folha = buffer_folha;
+    temp->indexanime = buffer_idxanime;
+    temp->indexmanga = buffer_idxmanga;
+    for (int i = 0; i < NTRIE; i++)
+    {
+        fread(&buffer_filhos[i], sizeof(buffer_filhos[i]), 1, arq);
+        temp->filhos[i] = buffer_filhos[i];
+        if (temp->filhos[i] != NULL)
+        {
+            buffer = cria_NodoTrie('\0');
+            temp->filhos[i] = buffer;
+            temp->filhos[i] = recuperaTRIE(temp->filhos[i], arq);
+        }
+    }
+    return raiz;
+}
