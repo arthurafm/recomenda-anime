@@ -15,8 +15,8 @@ std::vector<int> geraSequenciaDeGaps(int tam);
 
 trie_string* cria_arq_inv(trie_string* raiz, int tipo);
 
-void Busca_Um_Campo(char* nome, trie_string* raiz);
-void Busca_Dois_Campos(char* nome1, char* nome2, trie_string* raiz1, trie_string* raiz2);
-void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2, trie_string* raiz1);
+void Busca_Um_Campo(char* nome, int tipo);
+void Busca_Dois_Campos(char* nome1, char* nome2);
+void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2);
 
-void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu);
+void recomendaAnime(int id);

@@ -1,8 +1,6 @@
-
 #include <iostream>
 #include <fstream>
 #include "../include/Operacoes.h"
-
 
 // Função para abrir arquivos pela stdio.h
 short AbreArquivo(FILE **arq, char *nome_arq, char *modo){

@@ -110,4 +110,8 @@ NodoTrie* atualiza_ids(NodoTrie* raiz, char* name, int index);
 
 void armazenaTRIE(NodoTrie *raiz, FILE *arq);
 
+void armazenaTRIESTRING(trie_string* raiz, FILE* arq);
+
 NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq);
+
+trie_string* recuperaTRIESTRING(trie_string* raiz, FILE* arq);

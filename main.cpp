@@ -7,9 +7,10 @@ int main()
 
     /* 3. Realizar a coleta e a persistência de dados de maneira incremental, o programa deve manter os dados nos arquivos e, ao carregar, o programa deve ler os
           dados processados anteriormente. Se novos dados forem processados, eles devem ser adicionados aos já existentes. */
-    int csv_cond = 0, csv_flag = 0, ctrl_processa = 0;
+    int csv_cond = 0, csv_flag = 0;
+    int csv_existe = 0;
     std::string csv_nome_anime;
-    while(ctrl_processa == 0){
+    while(csv_existe == 0){
         if(ArquivoExiste("anime.bin") == -1){
         /* 1. Processar dados brutos provenientes da Web ou a partir de arquivos locais, do tipo TXT, CSV, HTML ou XML, os quais serão a fonte de dados inicial;
               O programa deve importar múltiplos documentos de entrada. */
@@ -17,11 +18,11 @@ int main()
             fflush(stdin);
             std::cin >> csv_nome_anime;
             if(ArquivoExiste(csv_nome_anime) == -1){
-                std::cout << "Digite um CSV valido" << std::endl;
+                std::cout << "Arquivo CSV nao existe." << std::endl << std::endl;
             }
             else{
                 ProcessaArquivoCSV(csv_nome_anime, csv_flag);
-                ctrl_processa = 1;
+                csv_existe = 1;
             }
         }
         else{
@@ -32,16 +33,16 @@ int main()
                 fflush(stdin);
                 std::cin >> csv_nome_anime;
                 if(ArquivoExiste(csv_nome_anime) == -1){
-                    std::cout << "Digite um CSV valido" << std::endl;
+                    std::cout << "Arquivo CSV nao existe." << std::endl << std::endl;
                 }
                 else{
                     csv_flag = 1;
                     ProcessaArquivoCSV(csv_nome_anime, csv_flag);
-                    ctrl_processa = 1;
+                    csv_existe = 1;
                 }
             }
             else{
-                ctrl_processa = 1;
+                csv_existe = 1;
             }
         }
     }

@@ -287,8 +287,8 @@ void ordenaAnimeInverso(){
     free_NodoTrie(raiz_trie);
 
     // Update dos arquivos invertidos
-    char nome_licensors[] = "licensors.bin", nome_genres[] = "genres.bin", nome_studios[] = "studios.bin";
     FILE *arq_licensors = NULL, *arq_genres = NULL, *arq_studios = NULL;
+    char nome_licensors[] = "licensors.bin", nome_genres[] = "genres.bin", nome_studios[] = "studios.bin";
     trie_string* raiz_licensors = cria_trie_string('\0');
     raiz_licensors = cria_arq_inv(raiz_licensors, LICENSORS);
     AbreArquivo(&arq_licensors, nome_licensors, writeb);
@@ -317,6 +317,7 @@ void deletaAnime(int id){
     BPTree bpt_anime(GRAU);
     std::ifstream arq_entrada;
     unsigned int i = 0;
+    int ctrl_delete = 0;
     arq_entrada.open("anime.bin", std::ios::binary);
     arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
     do{
@@ -327,6 +328,7 @@ void deletaAnime(int id){
         }
         else{
             std::cout << "O anime " << buffer_anime.name << " foi deletado!" << std::endl << std::endl;
+            ctrl_delete = 1;
         }
         arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
     }while(!(arq_entrada.eof()));
@@ -386,6 +388,9 @@ void deletaAnime(int id){
     armazenaTRIESTRING(raiz_studios, arq_studios);
     fclose(arq_studios);
     free_trie_string(raiz_studios);
+    if(ctrl_delete == 0){
+        std::cout << "ID nao encontrado" << std::endl << std::endl;
+    }
 }
 
 // Geração de sequência de gaps para utilização na ordenação shellSort via CIURA
@@ -431,7 +436,6 @@ trie_string* cria_arq_inv(trie_string* raiz, int tipo)
             raiz = insert_trie_string(raiz, dados_entrada_anime[i].genres, i);
         }
     }
-
     else if (tipo == LICENSORS)
     {   // Se escolhido licensors, o arquivo invertido sera de licenciadores
         for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
@@ -454,7 +458,7 @@ void Busca_Um_Campo(char* nome, int tipo){
     std::vector<Anime> dados_entrada_anime;
     Anime buffer_anime;
     std::ifstream arq_entrada;
-    char nome_genres[] = "genres.bin", nome_studios[] = "studios.bin", readbinary[] = "rb";
+    char readbinary[] = "rb", nome_genres[] = "genres.bin", nome_studios[] = "studios.bin";
     arq_entrada.open("anime.bin", std::ios::binary);
     arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
     do{
@@ -629,7 +633,7 @@ void recomendaAnime(int id){
     std::vector<Anime> dados_entrada_anime;
     Anime buffer_anime_leitura;
     std::ifstream arq_entrada;
-    char nome_genres[] = "genres.bin", nome_studios[] = "studios.bin", readbinary[] = "rb";
+    char nome_genres[] = "genres.bin", nomes_studios[] = "studios.bin", readbinary[] = "rb";
     arq_entrada.open("anime.bin", std::ios::binary);
     arq_entrada.read((char *) &buffer_anime_leitura, sizeof(Anime));
     do{
@@ -645,7 +649,7 @@ void recomendaAnime(int id){
     AbreArquivo(&arq_gen, nome_genres, readbinary);
     raiz_gen = recuperaTRIESTRING(raiz_gen, arq_gen);
     fclose(arq_gen);
-    AbreArquivo(&arq_stu, nome_studios, readbinary);
+    AbreArquivo(&arq_stu, nomes_studios, readbinary);
     raiz_stu = recuperaTRIESTRING(raiz_stu, arq_stu);
     fclose(arq_stu);
 
