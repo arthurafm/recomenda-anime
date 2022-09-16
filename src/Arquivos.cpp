@@ -61,26 +61,28 @@ void ProcessaArquivoCSV(){
     }
 
     // Criacao da arvore TRIE
-    NodoTrie* raiztrie = cria_NodoTrie('\0');
-    for (unsigned long long int i = 0; i < dados_entrada_anime.size(); i++)
+    NodoTrie* raiztrie_anime = cria_NodoTrie('\0');
+    NodoTrie* raiztrie_manga = cria_NodoTrie('\0');
+    for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
     {
         char* nome = (char*) calloc (strlen(dados_entrada_anime[i].name) + 1, sizeof(char));
         for (unsigned int j = 0; j < strlen(dados_entrada_anime[i].name); j++)
         {
             nome[j] = dados_entrada_anime[i].name[j];
         }
-        raiztrie = insert_trie(raiztrie, nome, i, ANIME);
-        //free(nome);
+        raiztrie_anime = insert_trie(raiztrie_anime, nome, i);
+        free(nome);
     }
-    for (unsigned long long int i = 0; i < dados_entrada_manga.size(); i++)
+
+    for (unsigned int i = 0; i < dados_entrada_manga.size(); i++)
     {
         char* nome = (char*) calloc (strlen(dados_entrada_manga[i].title) + 1, sizeof(char));
         for (unsigned int j = 0; j < strlen(dados_entrada_manga[i].title); j++)
         {
             nome[j] = dados_entrada_manga[i].title[j];
         }
-        raiztrie = insert_trie(raiztrie, nome, i, MANGA);
-        //free(nome);
+        raiztrie_manga = insert_trie(raiztrie_manga, nome, i);
+        free(nome);
     }
 
     // Manipulação de arquivos binários
@@ -105,11 +107,18 @@ void ProcessaArquivoCSV(){
     bpt_manga.armazenaBPTree(bpt_manga.getRaiz(), bin_bpt_manga);
     fclose(bin_bpt_manga);
 
-    char bin_trie_arq[] = "trie.bin";
-    FILE *bin_trie = NULL;
-    AbreArquivo(&bin_trie, bin_trie_arq, writeb);
-    armazenaTRIE(raiztrie, bin_trie);
-    fclose(bin_trie);
+    char bin_trie_arq1[] = "trie_anime.bin";
+    char bin_trie_arq2[] = "trie_manga.bin";
+    FILE *bin_trie1 = NULL;
+    FILE *bin_trie2 = NULL;
+    AbreArquivo(&bin_trie1, bin_trie_arq1, writeb);
+    armazenaTRIE(raiztrie_anime, bin_trie1);
+    fclose(bin_trie1);
+    free_NodoTrie(raiztrie_anime);
+    AbreArquivo(&bin_trie2, bin_trie_arq2, writeb);
+    armazenaTRIE(raiztrie_manga, bin_trie2);
+    fclose(bin_trie2);
+    free_NodoTrie(raiztrie_manga);
 }
 
 Nodo::Nodo(std::size_t _grau){ // Construtor de Nodo
@@ -513,8 +522,7 @@ NodoTrie* cria_NodoTrie(char caracter) {
         nodo->filhos[i] = NULL;
     nodo->eh_folha = 0;
     nodo->caracter = caracter;
-    nodo->indexanime = -1;
-    nodo->indexmanga = -1;
+    nodo->index = -1;
     return nodo;
 }
 
@@ -551,7 +559,7 @@ void free_trie_string(trie_string* raiz)
     free(raiz);
 }
 
-NodoTrie* insert_trie(NodoTrie* raiz, char* name, int index, int anime_ou_manga) {
+NodoTrie* insert_trie(NodoTrie* raiz, char* name, int index) {
     // Insere o nome do manga ou do anime numa arvore TRIE
     NodoTrie* temp = raiz;
     for (int i=0; name[i] != '\0'; i++) {
@@ -572,14 +580,7 @@ NodoTrie* insert_trie(NodoTrie* raiz, char* name, int index, int anime_ou_manga)
     // Temp eh folha
     temp->eh_folha = 1;
     // Temp recebe index da lista onde o dado se encontra
-    if (anime_ou_manga == ANIME)
-    {
-        temp->indexanime = index;
-    }
-    else if (anime_ou_manga == MANGA)
-    {
-        temp->indexmanga = index;
-    }
+    temp->index = index;
     return raiz;
 }
 
@@ -621,7 +622,7 @@ trie_string* insert_trie_string(trie_string* raiz, char* name, int index)
     return raiz;
 }
 
-int busca_trie(NodoTrie* raiz, char* name, int anime_ou_manga)
+int busca_trie(NodoTrie* raiz, char* name)
 {
     // Procura pelo nome do anime/manga na TRIE
     NodoTrie* temp = raiz;
@@ -642,14 +643,7 @@ int busca_trie(NodoTrie* raiz, char* name, int anime_ou_manga)
     }
     if (temp != NULL && temp->eh_folha == 1)
     {
-        if (anime_ou_manga == ANIME)
-        {
-            return temp->indexanime;
-        }
-        else if (anime_ou_manga == MANGA)
-        {
-            return temp->indexmanga;
-        }
+        return temp->index;
     }
     return -1;
 }
@@ -853,16 +847,16 @@ void print_trie_string(trie_string* raiz)
     }
 }
 
-void print_nome(NodoTrie* raiz, char* name, int anime_ou_manga) {
+void print_nome(NodoTrie* raiz, char* name) {
     // Procura por um determinado nome em uma arvore TRIE
     std::cout << "Searching for " << name << " ";
-    if (busca_trie(raiz, name, anime_ou_manga) == -1)
+    if (busca_trie(raiz, name) == -1)
         printf("Not Found\n");
     else
         printf("Found!\n");
 }
 
-void pega_ids_anime(NodoTrie* raiz, std::vector <int> &ids) {
+void pega_ids(NodoTrie* raiz, std::vector <int> &ids) {
     // Printa os nodos de uma arvore TRIE
     if (!raiz)
         return;
@@ -870,29 +864,14 @@ void pega_ids_anime(NodoTrie* raiz, std::vector <int> &ids) {
     NodoTrie* temp = raiz;
     if (temp->eh_folha)
     {
-        ids.push_back(temp->indexanime);
+        ids.push_back(temp->index);
     }
     for (int i=0; i<NTRIE; i++) {
-        pega_ids_anime(temp->filhos[i], ids);
+        pega_ids(temp->filhos[i], ids);
     }
 }
 
-void pega_ids_manga(NodoTrie* raiz, std::vector <int> &ids) {
-    // Printa os nodos de uma arvore TRIE
-    if (!raiz)
-        return;
-
-    NodoTrie* temp = raiz;
-    if (temp->eh_folha)
-    {
-        ids.push_back(temp->indexmanga);
-    }
-    for (int i=0; i<NTRIE; i++) {
-        pega_ids_manga(temp->filhos[i], ids);
-    }
-}
-
-NodoTrie* atualiza_ids_anime(NodoTrie* raiz, char* name, int index)
+NodoTrie* atualiza_ids(NodoTrie* raiz, char* name, int index)
 {
     NodoTrie* temp = raiz;
     for (int i=0; name[i] != '\0'; i++) {
@@ -906,48 +885,28 @@ NodoTrie* atualiza_ids_anime(NodoTrie* raiz, char* name, int index)
         }
     }
     // Temp eh folha
-    temp->indexanime = index;
-    return raiz;
-}
-
-NodoTrie* atualiza_ids_manga(NodoTrie* raiz, char* name, int index)
-{
-    NodoTrie* temp = raiz;
-    for (int i=0; name[i] != '\0'; i++) {
-        if (name[i] <= 'Z' && name[i] >= 'A')
-        {
-            name[i] += 32;
-        }
-        if(name[i] <= 'z' && name[i] >= 'a'){
-            int j = name[i] - 'a';
-            temp = temp->filhos[j];
-        }
-    }
-    // Temp eh folha
-    temp->indexmanga = index;
+    temp->index = index;
     return raiz;
 }
 
 void armazenaTRIE(NodoTrie* raiz, FILE* arq)
 {
     char caracter;
-    int folha, idxanime, idxmanga;
+    int folha, idx;
     NodoTrie* filhos[NTRIE];
     NodoTrie* temp = raiz;
     if (temp != NULL)
     {
         caracter = temp->caracter;
         folha = temp->eh_folha;
-        idxanime = temp->indexanime;
-        idxmanga = temp->indexmanga;
+        idx = temp->index;
         for (int i = 0; i < NTRIE; i++)
         {
             filhos[i] = temp->filhos[i];
         }
         fwrite(&caracter, sizeof(caracter), 1, arq);
         fwrite(&folha, sizeof(folha), 1, arq);
-        fwrite(&idxanime, sizeof(idxanime), 1, arq);
-        fwrite(&idxmanga, sizeof(idxmanga), 1, arq);
+        fwrite(&idx, sizeof(idx), 1, arq);
         for (int i = 0; i < NTRIE; i++)
         {
             fwrite(&filhos[i], sizeof(filhos[i]), 1, arq);
@@ -959,7 +918,7 @@ void armazenaTRIE(NodoTrie* raiz, FILE* arq)
 NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq)
 {
     char buffer_caracter;
-    int buffer_folha, buffer_idxanime, buffer_idxmanga;
+    int buffer_folha, buffer_idx;
     NodoTrie* buffer_filhos[NTRIE];
 
     NodoTrie* temp = raiz;
@@ -967,13 +926,11 @@ NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq)
 
     fread(&buffer_caracter, sizeof(buffer_caracter), 1, arq);
     fread(&buffer_folha, sizeof(buffer_folha), 1, arq);
-    fread(&buffer_idxanime, sizeof(buffer_idxanime), 1, arq);
-    fread(&buffer_idxmanga, sizeof(buffer_idxmanga), 1, arq);
+    fread(&buffer_idx, sizeof(buffer_idx), 1, arq);
 
     temp->caracter = buffer_caracter;
     temp->eh_folha = buffer_folha;
-    temp->indexanime = buffer_idxanime;
-    temp->indexmanga = buffer_idxmanga;
+    temp->index = buffer_idx;
     for (int i = 0; i < NTRIE; i++)
     {
         fread(&buffer_filhos[i], sizeof(buffer_filhos[i]), 1, arq);
