@@ -7,12 +7,35 @@ int main()
 
     /* 3. Realizar a coleta e a persistência de dados de maneira incremental, o programa deve manter os dados nos arquivos e, ao carregar, o programa deve ler os
           dados processados anteriormente. Se novos dados forem processados, eles devem ser adicionados aos já existentes. */
-    if((ArquivoExiste("anime.bin") == -1) && (ArquivoExiste("manga.bin") == -1)){
+    int csv_cond = 0, csv_flag = 0;
+    std::string csv_nome_anime, csv_nome_manga;
+    if(true){//if((ArquivoExiste("anime.bin") == -1) || (ArquivoExiste("manga.bin") == -1)){
 
     /* 1. Processar dados brutos provenientes da Web ou a partir de arquivos locais, do tipo TXT, CSV, HTML ou XML, os quais serão a fonte de dados inicial;
           O programa deve importar múltiplos documentos de entrada. */
-        ProcessaArquivoCSV();
+        std::cout << "Digite o nome do CSV de Anime: " << std::endl;
+        fflush(stdin);
+        std::cin >> csv_nome_anime;
+        std::cout << "Digite o nome do CSV de Manga: " << std::endl;
+        fflush(stdin);
+        std::cin >> csv_nome_manga;
+        ProcessaArquivoCSV(csv_nome_anime, csv_nome_manga, csv_flag);
     }
+    else{
+        std::cout << "Voce quer ler um CSV novo?\n1 para Sim, 0 para Nao" << std::endl;
+        std::cin >> csv_cond;
+        if(csv_cond == 1){
+            std::cout << "Digite o nome do CSV de Anime: " << std::endl;
+            fflush(stdin);
+            std::cin >> csv_nome_anime;
+            std::cout << "Digite o nome do CSV de Manga: " << std::endl;
+            fflush(stdin);
+            std::cin >> csv_nome_manga;
+            csv_flag = 1;
+            ProcessaArquivoCSV(csv_nome_anime, csv_nome_manga, csv_flag);
+        }
+    }
+
 
     char nome1[200], nome2[200];
     int op_code, id;
@@ -29,8 +52,9 @@ int main()
         std::cout << "Selecione a operacao desejada:" << std::endl
         << "1: Recomendar Anime" << std::endl << "2: Buscar Anime" << std::endl << "3: Excluir Anime"
         << std::endl << "4: Top Anime ordenado" << std::endl << "5: Top Anime inverso" << std::endl
-        << "6: Buscar Anime por prefixo" << std::endl << "7: Buscar Anime por genero e licensiador"
-        << std::endl << "8: Buscar Anime por dois studios"
+        << "6: Buscar Anime por prefixo" << std::endl << "7: Buscar Anime por genero" << std::endl
+        << "8: Buscar Anime por estudio" << std::endl << "9: Buscar Anime por genero e licensiador"
+        << std::endl << "10: Buscar Anime por dois studios"
         << std::endl << "-1: Recomendar Manga" << std::endl << "-2: Buscar Manga" << std::endl
         << "-3: Excluir Manga" << std::endl << "-4: Top Manga" << std::endl << "-5: Top Manga inverso"
         << std::endl << "-6: Buscar Manga por prefixo" << std::endl << "-7: Buscar Manga por dois campos"
@@ -39,7 +63,9 @@ int main()
         std::cin >> op_code;
         switch(op_code){
             case 1:
-
+                std::cout << "Digite o ID:";
+                std::cin >> id;
+                recomendaAnime(id, raiz_genres, raiz_studios);
                 break;
                 /* 5. Permitir a busca de informações dos arquivos locais por algum critério.
                   (a) busca pela chave principal de um elemento é obrigatória. */
@@ -49,7 +75,7 @@ int main()
                 buscaAnimePorID(id);
             }
                 break;
-            /* 1. Tratar exclusão de registros, o que envolve a implementação de funções para remover elementos das
+                /* 1. Tratar exclusão de registros, o que envolve a implementação de funções para remover elementos das
                       mais diversas estruturas de dados implementados. */
             case 3:
                 std::cout << "Digite o ID:";
@@ -64,23 +90,45 @@ int main()
             case 5:
                 ordenaAnimeInverso();
                 break;
+                /* 2. Fazer buscas por prefixo */
             case 6:
                 std::cout << "Digite o nome: ";
-                std::cin >> nome1;
+                fflush(stdin);
+                gets(nome1);
                 buscaAnimePorPrefixo(nome1);
                 break;
+            /* 5. (b) além do acesso a chave usado a chave principal, deverá ser implementado pelo menos um arquivo
+                      invertido para um dos outros campos, onde será possível consultar todas as ocorrências de um dado valor. */
             case 7:
                 std::cout << "Digite o nome do genero: ";
-                std::cin >> nome1;
-                std::cout << "Digite o nome do licensiador: ";
-                std::cin >> nome2;
-                Busca_Dois_Campos(nome1, nome2, raiz_genres, raiz_licensors);
+                fflush(stdin);
+                gets(nome1);
+                Busca_Um_Campo(nome1, raiz_genres);
                 break;
             case 8:
+                std::cout << "Digite o nome do estudio: ";
+                fflush(stdin);
+                gets(nome1);
+                Busca_Um_Campo(nome1, raiz_studios);
+                break;
+                /* 4. Fazer buscas de múltiplos campos em paralelo. */
+            case 9:
+                std::cout << "Digite o nome do genero: ";
+                fflush(stdin);
+                gets(nome1);
+                std::cout << "Digite o nome do licensiador: ";
+                fflush(stdin);
+                gets(nome2);
+                Busca_Dois_Campos(nome1, nome2, raiz_genres, raiz_licensors);
+                break;
+                /* 3. Fazer buscas de múltiplos valores de um dado campo. */
+            case 10:
                 std::cout << "Digite o nome do studio 1: ";
-                std::cin >> nome1;
+                fflush(stdin);
+                gets(nome1);
                 std::cout << "Digite o nome do studio 2: ";
-                std::cin >> nome2;
+                fflush(stdin);
+                gets(nome2);
                 Busca_Dois_Mesmo_Campo(nome1, nome2, raiz_studios);
             case -1:
 
@@ -93,7 +141,7 @@ int main()
                 buscaMangaPorID(id);
             }
                 break;
-            /* 1. Tratar exclusão de registros, o que envolve a implementação de funções para remover elementos das
+                /* 1. Tratar exclusão de registros, o que envolve a implementação de funções para remover elementos das
                       mais diversas estruturas de dados implementados. */
             case -3:
                 std::cout << "Digite o ID:";
@@ -108,9 +156,11 @@ int main()
             case -5:
                 ordenaMangaInverso();
                 break;
+                /* 2. Fazer buscas por prefixo */
             case -6:
                 std::cout << "Digite o nome: ";
-                std::cin >> nome1;
+                fflush(stdin);
+                gets(nome1);
                 buscaMangaPorPrefixo(nome1);
                 break;
             case -7:

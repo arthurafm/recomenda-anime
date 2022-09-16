@@ -16,7 +16,7 @@
 
 short AbreArquivo(FILE **arq, char nome_arq[], char *modo);
 short ArquivoExiste(std::string name);
-void ProcessaArquivoCSV();
+void ProcessaArquivoCSV(std::string nomecsv_anime, std::string nomecsv_manga, int bin_existe);
 
 // Nodo da árvore B+
 struct Nodo{

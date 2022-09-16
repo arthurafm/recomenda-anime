@@ -4,6 +4,7 @@
 #include <string.h>
 #include "..\include\Registro.h"
 
+
 // Construtor classe de Animes
 Anime::Anime(std::string linha){
     std::vector<std::string> row;

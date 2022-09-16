@@ -26,16 +26,28 @@ short ArquivoExiste(std::string name){
     }
 }
 
+
 // Função que lê CSVs e cria arquivos binarios
-void ProcessaArquivoCSV(){
+void ProcessaArquivoCSV(std::string nomecsv_anime, std::string nomecsv_manga, int bin_existe){
     // Buffers de leitura de linha
-    std::ifstream entrada_anime("anime.csv");
-    std::ifstream entrada_manga("manga.csv");
+    std::ifstream entrada_anime(nomecsv_anime);
+    std::ifstream entrada_manga(nomecsv_manga);
     std::string linha;
 
     // Declaracao do vetores de registros que contem a database
     std::vector<Anime> dados_entrada_anime;
     std::vector<Manga> dados_entrada_manga;
+
+    if(bin_existe == 1){ // Se o arquivo binário já existe, lê ele primeiro antes do CSV
+        std::ifstream arq_entrada_bin;
+        Anime buffer_anime;
+        arq_entrada_bin.open("anime.bin", std::ios::binary);
+        while(!(arq_entrada_bin.eof())){
+            arq_entrada_bin.read((char *) &buffer_anime, sizeof(Anime));
+            dados_entrada_anime.push_back(buffer_anime);
+        }
+        arq_entrada_bin.close();
+    }
 
     // Leitura do arquivo
     while(std::getline(entrada_anime, linha)){
@@ -127,14 +139,14 @@ Nodo::Nodo(std::size_t _grau){ // Construtor de Nodo
     this->numChaves = 0;
     int* _chave = new int[grau - 1];
     int* _indice = new int[grau - 1];
-    for(int i = 0; i < (grau - 1); i++){
+    for(unsigned int i = 0; i < (grau - 1); i++){
         _chave[i] = 0;
         _indice[i] = 0;
     }
     this->chave = _chave;
     this->indice = _indice;
     Nodo** _filhos = new Nodo*[grau];
-    for(int i=0; i<grau; i++){
+    for(unsigned int i=0; i<grau; i++){
         _filhos[i] = nullptr;
     }
     this->filhos = _filhos;
@@ -155,13 +167,13 @@ Nodo* BPTree::getRaiz(){
 }
 
 Nodo* BPTree::procuraNodo(Nodo* nodo, int id){
-    if(nodo == nullptr){ // Se raiz é nula, devolve NULL
+    if(nodo == nullptr){ // Se a árvore é vazia, devolve NULL
         return nullptr;
     }
     else{
         Nodo* cursor = nodo;
         while(!cursor->ehFolha){
-            for(int i = 0; i < cursor->numChaves; i++){
+            for(unsigned int i = 0; i < cursor->numChaves; i++){
                 if(id < cursor->chave[i]){
                     cursor = cursor->filhos[i];
                     break;
@@ -172,23 +184,23 @@ Nodo* BPTree::procuraNodo(Nodo* nodo, int id){
                 }
             }
         }
-        for(int i = 0; i < cursor->numChaves; i++){
+        for(unsigned int i = 0; i < cursor->numChaves; i++){
             if(cursor->chave[i] == id){
-                return cursor;
+                return cursor; // Retorna nodo que contém chave procurada
             }
         }
-        return nullptr;
+        return nullptr; // Se chave não está na árvore, devolve NULL
     }
 }
 
 Nodo* BPTree::procuraEmAlcanceBPTree(Nodo* nodo, int id){
     if(nodo == nullptr){
-        return nullptr;
+        return nullptr; // Retorna NULL, se o nodo for vazio
     }
     else{
         Nodo* cursor = nodo;
         while(!cursor->ehFolha){
-            for(int i = 0; i < cursor->numChaves; i++){
+            for(unsigned int i = 0; i < cursor->numChaves; i++){ // Percorre a árvore até a folha
                 if(id < cursor->chave[i]){
                     cursor = cursor->filhos[i];
                     break;
@@ -199,7 +211,7 @@ Nodo* BPTree::procuraEmAlcanceBPTree(Nodo* nodo, int id){
                 }
             }
         }
-        return cursor;
+        return cursor; // Retorna nodo que contém a chave
     }
 }
 
@@ -212,16 +224,16 @@ int BPTree::procuraEmAlcance(int inicio, int fim, int* resultado){
         if(cursor == nullptr){
             break;
         }
-        for(int i = 0; i< cursor->numChaves; i++){
+        for(unsigned int i = 0; i < cursor->numChaves; i++){
             temp = cursor->chave[i];
             if((temp >= inicio) && (temp <= fim)){
-                resultado[index] = temp;
+                resultado[index] = temp; // Preenche o vetor com chaves dentro do range procurado
                 index++;
             }
         }
         cursor = cursor->filhos[cursor->numChaves];
     }
-    return index;
+    return index; // Retorna indice que termina o range procurado
 }
 
 int BPTree::procuraBPTree(int id){
@@ -230,15 +242,17 @@ int BPTree::procuraBPTree(int id){
         return -1; // Retorna -1, se a chave não está contida na B+
     }
     else{
-        for(int i = 0; i < nodo->numChaves; i++){
+        for(unsigned int i = 0; i < nodo->numChaves; i++){
             if(nodo->chave[i] == id){
                 return (nodo->indice[i]); // Retorna o indice se existe
             }
         }
     }
+    return -1; // Retorna -1, se a chave não está contida na B+
 }
 
-int BPTree::achaIndice(int* vetor, int data, int tam){
+
+int BPTree::achaIndice(int* vetor, int data, int tam){ // Acha indice ordenado de uma chave em um vetor
     int index = 0;
     for(int i = 0; i < tam; i++){
         if(data < vetor[i]){
@@ -253,7 +267,7 @@ int BPTree::achaIndice(int* vetor, int data, int tam){
     return index;
 }
 
-int* BPTree::insereChave(int* vetor_ch, int data, int tam){
+int* BPTree::insereChave(int* vetor_ch, int data, int tam){ // Insere chave dentro de um vetor de chaves, de forma ordenada
     int indice = 0;
     for(int i = 0; i < tam; i++){
         if(data < vetor_ch[i]){
@@ -272,7 +286,7 @@ int* BPTree::insereChave(int* vetor_ch, int data, int tam){
     return vetor_ch;
 }
 
-int* BPTree::insereIndice(int* vetor_ch, int* vetor_in, int data, int index, int tam){
+int* BPTree::insereIndice(int* vetor_ch, int* vetor_in, int data, int index, int tam){ // Insere indice dentro de um vetor de indices, ordenado pelas chaves
     int indice = 0;
     for(int i = 0; i < tam; i++){
         if(data < vetor_ch[i]){
@@ -291,7 +305,7 @@ int* BPTree::insereIndice(int* vetor_ch, int* vetor_in, int data, int index, int
     return vetor_in;
 }
 
-Nodo** BPTree::insereFilho(Nodo** vetor_filho, Nodo* filho, int tam, int indice){
+Nodo** BPTree::insereFilho(Nodo** vetor_filho, Nodo* filho, int tam, int indice){ // Insere filho no nodo
     for(int i = tam; i > indice; i--){
         vetor_filho[i] = vetor_filho[i - 1];
     }
@@ -299,10 +313,10 @@ Nodo** BPTree::insereFilho(Nodo** vetor_filho, Nodo* filho, int tam, int indice)
     return vetor_filho;
 }
 
-Nodo* BPTree::insereChaveFilho(Nodo* nodo, int data, int index, Nodo* filho){
+Nodo* BPTree::insereChaveFilho(Nodo* nodo, int data, int index, Nodo* filho){ // Insere chave no nodo e aponta pro filho
     int chave_index = 0;
     int filho_index = 0;
-    for(int i = 0; i < nodo->numChaves; i++){
+    for(unsigned int i = 0; i < nodo->numChaves; i++){
         if(data < nodo->chave[i]){
             chave_index = i;
             filho_index = i + 1;
@@ -327,7 +341,7 @@ Nodo* BPTree::insereChaveFilho(Nodo* nodo, int data, int index, Nodo* filho){
     return nodo;
 }
 
-void BPTree::inserePai(Nodo* pai, Nodo* filho, int data, int index){
+void BPTree::inserePai(Nodo* pai, Nodo* filho, int data, int index){ // Insere alterando raiz da subarvore local
     Nodo* cursor = pai;
     if(cursor->numChaves < (this->grau - 1)){
         cursor = insereChaveFilho(cursor, data, index, filho);
@@ -338,14 +352,14 @@ void BPTree::inserePai(Nodo* pai, Nodo* filho, int data, int index){
         n_nodo->pai = cursor->pai;
         int* buffer_ch = new int[cursor->numChaves + 1];
         int* buffer_in = new int[cursor->numChaves + 1];
-        for(int i = 0; i < cursor->numChaves; i++){
+        for(unsigned int i = 0; i < cursor->numChaves; i++){
             buffer_ch[i] = cursor->chave[i];
             buffer_in[i] = cursor->indice[i];
         }
         buffer_in = insereIndice(buffer_ch, buffer_in, data, index, cursor->numChaves);
         buffer_ch = insereChave(buffer_ch, data, cursor->numChaves);
         auto** buffer_filho = new Nodo*[cursor->numChaves + 2];
-        for(int i = 0; i < (cursor->numChaves + 1); i++){
+        for(unsigned int i = 0; i < (cursor->numChaves + 1); i++){
             buffer_filho[i] = cursor->filhos[i];
         }
         buffer_filho[cursor->numChaves + 1] = nullptr;
@@ -357,13 +371,13 @@ void BPTree::inserePai(Nodo* pai, Nodo* filho, int data, int index){
         else{
             n_nodo->numChaves = (this->grau) / 2;
         }
-        for(int i = 0; i < cursor->numChaves; i++){
+        for(unsigned int i = 0; i < cursor->numChaves; i++){
             cursor->chave[i] = buffer_ch[i];
             cursor->indice[i] = buffer_in[i];
             cursor->filhos[i] = buffer_filho[i];
         }
         cursor->filhos[cursor->numChaves] = buffer_filho[cursor->numChaves];
-        for(int i = 0; i < n_nodo->numChaves; i++){
+        for(unsigned int i = 0; i < n_nodo->numChaves; i++){
             n_nodo->chave[i] = buffer_ch[cursor->numChaves + i +1];
             n_nodo->indice[i] = buffer_in[cursor->numChaves + i +1];
             n_nodo->filhos[i] = buffer_filho[cursor->numChaves + i + 1];
@@ -393,7 +407,7 @@ void BPTree::inserePai(Nodo* pai, Nodo* filho, int data, int index){
     }
 }
 
-void BPTree::insereBPTree(int data, int index){
+void BPTree::insereBPTree(int data, int index){ // Insere na árvore B+
     if(this->raiz == nullptr){
         this->raiz = new Nodo(this->grau);
         this->raiz->ehFolha = true;
@@ -417,7 +431,7 @@ void BPTree::insereBPTree(int data, int index){
             n_nodo->pai = cursor->pai;
             int* buffer_ch = new int[cursor->numChaves + 1];
             int* buffer_in = new int[cursor->numChaves + 1];
-            for(int i = 0; i < cursor->numChaves; i++){
+            for(unsigned int i = 0; i < cursor->numChaves; i++){
                 buffer_ch[i] = cursor->chave[i];
                 buffer_in[i] = cursor->indice[i];
             }
@@ -430,11 +444,11 @@ void BPTree::insereBPTree(int data, int index){
             else{
                 n_nodo->numChaves = (this->grau) / 2 + 1;
             }
-            for(int i = 0; i < cursor->numChaves; i++){
+            for(unsigned int i = 0; i < cursor->numChaves; i++){
                 cursor->chave[i] = buffer_ch[i];
                 cursor->indice[i] = buffer_in[i];
             }
-            for(int i = 0; i < n_nodo->numChaves; i++){
+            for(unsigned int i = 0; i < n_nodo->numChaves; i++){
                 n_nodo->chave[i] = buffer_ch[cursor->numChaves + i];
                 n_nodo->indice[i] = buffer_in[cursor->numChaves + i];
             }
@@ -463,10 +477,10 @@ void BPTree::insereBPTree(int data, int index){
     }
 }
 
-void BPTree::limpaBPT(Nodo* cursor){
+void BPTree::limpaBPT(Nodo* cursor){ // Deleta a árvore recursivamente
     if(cursor != nullptr){
         if(!cursor->ehFolha){
-            for(int i=0; i <= cursor->numChaves; i++){
+            for(unsigned int i=0; i <= cursor->numChaves; i++){
                 limpaBPT(cursor->filhos[i]);
             }
         }
@@ -481,25 +495,24 @@ void BPTree::printaBPT(){
     printaNodos(this->raiz);
 }
 
-void BPTree::printaNodos(Nodo* cursor){
+void BPTree::printaNodos(Nodo* cursor){ // Printa a arvore recursivamente
     if(cursor != NULL){
-        for(int i = 0; i < cursor->numChaves; ++i){
+        for(unsigned int i = 0; i < cursor->numChaves; ++i){
             std::cout << cursor->chave[i] << "." << cursor->indice[i] << " ";
         }
         std::cout << "\n";
         if(!cursor->ehFolha){
-            for(int i = 0; i < (cursor->numChaves + 1); ++i){
+            for(unsigned int i = 0; i < (cursor->numChaves + 1); ++i){
                 printaNodos(cursor->filhos[i]);
             }
         }
     }
 }
 
-// Função para armazenar árvore B+ em binário
-void BPTree::armazenaBPTree(Nodo *cursor, FILE* arq){
+void BPTree::armazenaBPTree(Nodo *cursor, FILE* arq){ // Função para armazenar árvore B+ em binário recursivamente
     int aux1, aux2;
     if(cursor != NULL){
-        for(int i = 0; i < cursor->numChaves; i++){
+        for(unsigned int i = 0; i < cursor->numChaves; i++){
             if(cursor->ehFolha == true){
                 aux1 = cursor->chave[i];
                 aux2 = cursor->indice[i];
@@ -508,7 +521,7 @@ void BPTree::armazenaBPTree(Nodo *cursor, FILE* arq){
             }
         }
         if(cursor->ehFolha != true){
-            for(int i = 0; i < (cursor->numChaves + 1); i++){
+            for(unsigned int i = 0; i < (cursor->numChaves + 1); i++){
                 armazenaBPTree(cursor->filhos[i], arq);
             }
         }
