@@ -40,10 +40,11 @@ void ProcessaArquivoCSV(std::string nomecsv_anime, int bin_existe){
         std::ifstream arq_entrada_bin;
         Anime buffer_anime;
         arq_entrada_bin.open("anime.bin", std::ios::binary);
-        while(!(arq_entrada_bin.eof())){
-            arq_entrada_bin.read((char *) &buffer_anime, sizeof(Anime));
+        arq_entrada_bin.read((char *) &buffer_anime, sizeof(Anime));
+        do{
             dados_entrada_anime.push_back(buffer_anime);
-        }
+            arq_entrada_bin.read((char *) &buffer_anime, sizeof(Anime));
+        }while(!(arq_entrada_bin.eof()));
         arq_entrada_bin.close();
     }
 
