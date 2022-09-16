@@ -527,7 +527,7 @@ NodoTrie* cria_NodoTrie(char caracter) {
 }
 
 trie_string* cria_trie_string(char caracter)
-{
+{   // Aloca memoria para um nodo trie_string, um nodo TRIE que guarda um vetor de inteiros
     trie_string* nodo = (trie_string*) calloc (1, sizeof(trie_string));
     for (int i=0; i<NTRIE; i++)
         nodo->filhos[i] = NULL;
@@ -548,7 +548,7 @@ void free_NodoTrie(NodoTrie* nodo) {
 }
 
 void free_trie_string(trie_string* raiz)
-{
+{   // Desaloca a memoria ocupada pelo nodo trie_string e todos os seus filhos
     for (int i=0; i<NTRIE; i++)
     {
         if (raiz->filhos[i] != NULL)
@@ -586,7 +586,7 @@ NodoTrie* insert_trie(NodoTrie* raiz, char* name, int index) {
 
 trie_string* insert_trie_string(trie_string* raiz, char* name, int index)
 {
-    // Insere o nome do manga ou do anime numa arvore TRIE
+    // Insere o nome da string para arquivo invertido numa arvore TRIE
     trie_string* temp = raiz;
     int i = 0;
     while (name[i] != '\0')
@@ -609,7 +609,7 @@ trie_string* insert_trie_string(trie_string* raiz, char* name, int index)
             i++;
         }
         if (name[i] == ';')
-        {
+        {   // Separador de palavras foi encontrado, esse eh o fim de um ramo
             temp->eh_folha = 1;
             temp->ids.push_back(index);
             i++;
@@ -618,7 +618,7 @@ trie_string* insert_trie_string(trie_string* raiz, char* name, int index)
     }
 
     temp->eh_folha = 1;
-    temp->ids.push_back(index);
+    temp->ids.push_back(index); // Ultima palavra foi lida
     return raiz;
 }
 
@@ -630,7 +630,7 @@ int busca_trie(NodoTrie* raiz, char* name)
     for(int i=0; name[i]!='\0'; i++)
     {
         if (name[i] <= 'Z' && name[i] >= 'A')
-        {
+        {   // Tratamento de maiusculas para se tornarem minusculas
             name[i] += 32;
         }
         if(name[i] <= 'z' && name[i] >= 'a'){
@@ -642,14 +642,14 @@ int busca_trie(NodoTrie* raiz, char* name)
         }
     }
     if (temp != NULL && temp->eh_folha == 1)
-    {
+    {   // Nome encontrado, retorna o seu indice
         return temp->index;
     }
     return -1;
 }
 
 std::vector<int> busca_trie_string(trie_string* raiz, char* name)
-{
+{   // Funcao analoga a busca_trie, mas seu retorno eh um vetor de inteiros
     trie_string* temp = raiz;
 
     for(int i=0; name[i]!='\0'; i++)
@@ -814,50 +814,8 @@ NodoTrie* delete_trie(NodoTrie* raiz, char* name) {
     return raiz;
 }
 
-void print_trie(NodoTrie* raiz) {
-    // Printa os nodos de uma arvore TRIE
-    if (!raiz)
-        return;
-    NodoTrie* temp = raiz;
-    printf("%c -> ", temp->caracter);
-    for (int i=0; i<NTRIE; i++) {
-        print_trie(temp->filhos[i]);
-    }
-}
-
-void print_trie_string(trie_string* raiz)
-{
-    // Printa os nodos de uma arvore TRIE
-    if (!raiz)
-        return;
-    trie_string* temp = raiz;
-    printf("%c -> ", temp->caracter);
-
-    if (temp->eh_folha)
-    {
-        std::cout << std::endl;
-        for (unsigned int i = 0; i < temp->ids.size(); i++)
-        {
-            std::cout << temp->ids[i] << " ";
-        }
-    }
-
-    for (int i=0; i<NTRIE; i++) {
-        print_trie_string(temp->filhos[i]);
-    }
-}
-
-void print_nome(NodoTrie* raiz, char* name) {
-    // Procura por um determinado nome em uma arvore TRIE
-    std::cout << "Searching for " << name << " ";
-    if (busca_trie(raiz, name) == -1)
-        printf("Not Found\n");
-    else
-        printf("Found!\n");
-}
-
 void pega_ids(NodoTrie* raiz, std::vector <int> &ids) {
-    // Printa os nodos de uma arvore TRIE
+    // Funcao que coleta todos ids a partir de um determinado nodo de TRIE
     if (!raiz)
         return;
 
@@ -873,6 +831,7 @@ void pega_ids(NodoTrie* raiz, std::vector <int> &ids) {
 
 NodoTrie* atualiza_ids(NodoTrie* raiz, char* name, int index)
 {
+    // Funcao responsavel por atualizar ID de um registro na TRIE
     NodoTrie* temp = raiz;
     for (int i=0; name[i] != '\0'; i++) {
         if (name[i] <= 'Z' && name[i] >= 'A')
@@ -891,10 +850,12 @@ NodoTrie* atualiza_ids(NodoTrie* raiz, char* name, int index)
 
 void armazenaTRIE(NodoTrie* raiz, FILE* arq)
 {
+    // Funcao responsavel por armazenar um NodoTrie em binario
     char caracter;
     int folha, idx;
     NodoTrie* filhos[NTRIE];
     NodoTrie* temp = raiz;
+
     if (temp != NULL)
     {
         caracter = temp->caracter;
@@ -904,11 +865,12 @@ void armazenaTRIE(NodoTrie* raiz, FILE* arq)
         {
             filhos[i] = temp->filhos[i];
         }
+        // Escreve no arquivo binario os valores do nodo
         fwrite(&caracter, sizeof(caracter), 1, arq);
         fwrite(&folha, sizeof(folha), 1, arq);
         fwrite(&idx, sizeof(idx), 1, arq);
         for (int i = 0; i < NTRIE; i++)
-        {
+        {   // Segue escrevendo recursivamente
             fwrite(&filhos[i], sizeof(filhos[i]), 1, arq);
             armazenaTRIE(filhos[i], arq);
         }
@@ -917,6 +879,7 @@ void armazenaTRIE(NodoTrie* raiz, FILE* arq)
 
 NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq)
 {
+    // Funcao responsavel por recuperar um NodoTrie de um arquivo binario
     char buffer_caracter;
     int buffer_folha, buffer_idx;
     NodoTrie* buffer_filhos[NTRIE];
@@ -924,6 +887,7 @@ NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq)
     NodoTrie* temp = raiz;
     NodoTrie* buffer;
 
+    // Le as variaveis do arquivo binario
     fread(&buffer_caracter, sizeof(buffer_caracter), 1, arq);
     fread(&buffer_folha, sizeof(buffer_folha), 1, arq);
     fread(&buffer_idx, sizeof(buffer_idx), 1, arq);
@@ -937,6 +901,7 @@ NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq)
         temp->filhos[i] = buffer_filhos[i];
         if (temp->filhos[i] != NULL)
         {
+            // Aloca memoria e recursivamente continua lendo o arquivo
             buffer = cria_NodoTrie('\0');
             temp->filhos[i] = buffer;
             temp->filhos[i] = recuperaTRIE(temp->filhos[i], arq);
