@@ -8,11 +8,13 @@ void buscaAnimePorID(int id){
     std::ifstream arq, arq_bpt;
     // Le o arquivo binario das bpt e gera sua estrutura
     arq_bpt.open("bpt_anime.bin", std::ios::binary);
-    while(!(arq_bpt.eof())){
+    arq_bpt.read((char *) &buffer_ch, sizeof(int));
+    arq_bpt.read((char *) &buffer_in, sizeof(int));
+    do{
+        buffer_bpt.insereBPTree(buffer_ch, buffer_in);
         arq_bpt.read((char *) &buffer_ch, sizeof(int));
         arq_bpt.read((char *) &buffer_in, sizeof(int));
-        buffer_bpt.insereBPTree(buffer_ch, buffer_in);
-    }
+    }while(!(arq_bpt.eof()));
     // Procura o id na bpt
     buffer_in = buffer_bpt.procuraBPTree(id);
     arq_bpt.close();
@@ -69,10 +71,11 @@ void buscaAnimePorPrefixo(char* nome)
     std::vector<int> ids;
     char nome_anime_bin[] = "anime.bin";
     AbreArquivo(&arqAnime, nome_anime_bin, readbinary);
-    while(!feof(arqAnime)){
-        fread(&buffer_anime, sizeof(buffer_anime), 1, arqAnime);
+    fread(&buffer_anime, sizeof(buffer_anime), 1, arqAnime);
+    do{
         dados_entrada_anime.push_back(buffer_anime);
-    }
+        fread(&buffer_anime, sizeof(buffer_anime), 1, arqAnime);
+    }while(!feof(arqAnime));
     fclose(arqAnime);
     // Coleta o vetor de indices para acessar diretamente no vetor dos registros
     pega_ids(raiz, ids);
@@ -94,10 +97,11 @@ void ordenaAnime(){
     Anime buffer_anime;
     std::ifstream arq_entrada;
     arq_entrada.open("anime.bin", std::ios::binary);
-    while(!(arq_entrada.eof())){
-        arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+    arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+    do{
         dados_entrada_anime.push_back(buffer_anime);
-    }
+        arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+    }while(!(arq_entrada.eof()));
     arq_entrada.close();
 
     // Ordenação via shellSort usando o ranking como parametro
@@ -182,10 +186,11 @@ void ordenaAnimeInverso(){
     Anime buffer_anime;
     std::ifstream arq_entrada;
     arq_entrada.open("anime.bin", std::ios::binary);
-    while(!(arq_entrada.eof())){
-        arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+    arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+    do{
         dados_entrada_anime.push_back(buffer_anime);
-    }
+        arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+    }while(!(arq_entrada.eof()));
     arq_entrada.close();
 
     // Ordenação via shellSort usando o ranking como parametro
@@ -265,14 +270,15 @@ void deletaAnime(int id){
     std::ifstream arq_entrada;
     unsigned int i = 0;
     arq_entrada.open("anime.bin", std::ios::binary);
-    while(!(arq_entrada.eof())){
-        arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+    arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+    do{
         if(buffer_anime.id != id){
             dados_entrada_anime.push_back(buffer_anime);
             bpt_anime.insereBPTree(buffer_anime.id, i);
             i++;
         }
-    }
+        arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+    }while(!(arq_entrada.eof()));
     arq_entrada.close();
     std::ofstream bin_anime;
     bin_anime.open("anime.bin", std::ios::binary);
@@ -335,10 +341,11 @@ trie_string* cria_arq_inv(trie_string* raiz, int tipo)
     std::vector<Anime> dados_entrada_anime;
     char nome_anime_bin[] = "anime.bin", readingbinary[] = "rb";
     AbreArquivo(&arq_anime, nome_anime_bin, readingbinary);
-    while(!feof(arq_anime)){
-        fread(&buffer_anime, sizeof(buffer_anime), 1, arq_anime);
+    fread(&buffer_anime, sizeof(buffer_anime), 1, arq_anime);
+    do{
         dados_entrada_anime.push_back(buffer_anime);
-    }
+        fread(&buffer_anime, sizeof(buffer_anime), 1, arq_anime);
+    }while(!feof(arq_anime));
     fclose(arq_anime);
 
     if (tipo == GENRES)
@@ -371,10 +378,11 @@ void Busca_Um_Campo(char* nome, trie_string* raiz){
     Anime buffer_anime;
     std::ifstream arq_entrada;
     arq_entrada.open("anime.bin", std::ios::binary);
-    while(!(arq_entrada.eof())){
-        arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+    arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+    do{
         dados_entrada_anime.push_back(buffer_anime);
-    }
+        arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
+    }while(!(arq_entrada.eof()));
     arq_entrada.close();
     std::vector<int> ids;
     ids = busca_trie_string(raiz, nome);
@@ -405,10 +413,11 @@ void Busca_Dois_Campos(char* nome1, char* nome2, trie_string* raiz1, trie_string
     AbreArquivo(&arq_anime, nome_anime_bin, readingbinary);
 
     // Carrega o vetor de registro Anime
-    while(!feof(arq_anime)){
-        fread(&buffer_anime, sizeof(buffer_anime), 1, arq_anime);
+    fread(&buffer_anime, sizeof(buffer_anime), 1, arq_anime);
+    do{
         dados_entrada_anime.push_back(buffer_anime);
-    }
+        fread(&buffer_anime, sizeof(buffer_anime), 1, arq_anime);
+    }while(!feof(arq_anime));
     fclose(arq_anime);
 
     // Realiza uma interseccao dos valores encontrados
@@ -450,10 +459,11 @@ void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2, trie_string* raiz1)
     AbreArquivo(&arq_anime, nome_anime_bin, readingbinary);
 
     // Carrega do arquivo binario o vetor de registros Anime
-    while(!feof(arq_anime)){
-        fread(&buffer_anime, sizeof(buffer_anime), 1, arq_anime);
+    fread(&buffer_anime, sizeof(buffer_anime), 1, arq_anime);
+    do{
         dados_entrada_anime.push_back(buffer_anime);
-    }
+        fread(&buffer_anime, sizeof(buffer_anime), 1, arq_anime);
+    }while(!feof(arq_anime));
     fclose(arq_anime);
 
     // Joga no vetor em comum todos os dados
@@ -500,21 +510,22 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
     Anime buffer_anime_leitura;
     std::ifstream arq_entrada;
     arq_entrada.open("anime.bin", std::ios::binary);
-    while(!(arq_entrada.eof())){
-        arq_entrada.read((char *) &buffer_anime_leitura, sizeof(Anime));
+    arq_entrada.read((char *) &buffer_anime_leitura, sizeof(Anime));
+    do{
         dados_entrada_anime.push_back(buffer_anime_leitura);
-    }
+        arq_entrada.read((char *) &buffer_anime_leitura, sizeof(Anime));
+    }while(!(arq_entrada.eof()));
     arq_entrada.close();
     BPTree buffer_bpt(GRAU);
     int buffer_in, buffer_ch;
     std::ifstream arq_bpt;
     // Le o arquivo binario das bpt e gera sua estrutura
     arq_bpt.open("bpt_anime.bin", std::ios::binary);
-    while(!(arq_bpt.eof())){
+    do{
         arq_bpt.read((char *) &buffer_ch, sizeof(int));
         arq_bpt.read((char *) &buffer_in, sizeof(int));
         buffer_bpt.insereBPTree(buffer_ch, buffer_in);
-    }
+    }while(!(arq_bpt.eof()));
     // Procura o id na bpt
     buffer_in = buffer_bpt.procuraBPTree(id);
     if(buffer_in == -1){
