@@ -1,7 +1,8 @@
-#include "..\include\Arquivos.h"
+
 #include <iostream>
 #include <fstream>
-#include "..\include\Registro.h"
+#include "../include/Operacoes.h"
+
 
 // Função para abrir arquivos pela stdio.h
 short AbreArquivo(FILE **arq, char *nome_arq, char *modo){
@@ -88,6 +89,31 @@ void ProcessaArquivoCSV(std::string nomecsv_anime, int bin_existe){
     armazenaTRIE(raiztrie_anime, bin_trie1);
     fclose(bin_trie1);
     free_NodoTrie(raiztrie_anime);
+
+
+    FILE *arq_licensors = NULL, *arq_genres = NULL, *arq_studios = NULL;
+    char nome_licensors[] = "licensors.bin", nome_genres[] = "genres.bin", nome_studios[] = "studios.bin";
+    trie_string* raiz_licensors = cria_trie_string('\0');
+    raiz_licensors = cria_arq_inv(raiz_licensors, LICENSORS);
+    AbreArquivo(&arq_licensors, nome_licensors, writeb);
+    armazenaTRIESTRING(raiz_licensors, arq_licensors);
+    fclose(arq_licensors);
+    free_trie_string(raiz_licensors);
+
+    trie_string* raiz_genres = cria_trie_string('\0');
+    raiz_genres = cria_arq_inv(raiz_genres, GENRES);
+    AbreArquivo(&arq_genres, nome_genres, writeb);
+    armazenaTRIESTRING(raiz_genres, arq_genres);
+    fclose(arq_genres);
+    free_trie_string(raiz_genres);
+
+    trie_string* raiz_studios = cria_trie_string('\0');
+    raiz_studios = cria_arq_inv(raiz_studios, STUDIOS);
+    AbreArquivo(&arq_studios, nome_studios, writeb);
+    armazenaTRIESTRING(raiz_studios, arq_studios);
+    fclose(arq_studios);
+    free_trie_string(raiz_studios);
+
 }
 
 Nodo::Nodo(std::size_t _grau){ // Construtor de Nodo
@@ -847,6 +873,46 @@ void armazenaTRIE(NodoTrie* raiz, FILE* arq)
     }
 }
 
+void armazenaTRIESTRING(trie_string* raiz, FILE* arq)
+{
+    // Funcao responsavel por armazenar um trie_string em binario
+    char caracter;
+    int folha;
+    char especial = '@';
+    std::vector<int> ids = {};
+    trie_string* filhos[NTRIE];
+    trie_string* temp = raiz;
+
+    if (temp != NULL)
+    {
+        caracter = temp->caracter;
+        folha = temp->eh_folha;
+        unsigned int tamanho = temp->ids.size();
+        for (unsigned int i = 0; i < tamanho; i++)
+        {
+            ids.push_back(temp->ids[i]);
+        }
+        for (int i = 0; i < NTRIE; i++)
+        {
+            filhos[i] = temp->filhos[i];
+        }
+        // Escreve no arquivo binario os valores do nodo
+        fwrite(&especial, sizeof(especial), 1, arq);
+        fwrite(&tamanho, sizeof(tamanho), 1, arq);
+        for (unsigned int i = 0; i < tamanho; i++)
+        {
+            fwrite(&ids[i], sizeof(ids[i]), 1, arq);
+        }
+        fwrite(&caracter, sizeof(caracter), 1, arq);
+        fwrite(&folha, sizeof(folha), 1, arq);
+        for (int i = 0; i < NTRIE; i++)
+        {   // Segue escrevendo recursivamente
+            fwrite(&filhos[i], sizeof(filhos[i]), 1, arq);
+            armazenaTRIESTRING(filhos[i], arq);
+        }
+    }
+}
+
 NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq)
 {
     // Funcao responsavel por recuperar um NodoTrie de um arquivo binario
@@ -875,6 +941,52 @@ NodoTrie* recuperaTRIE(NodoTrie* raiz, FILE* arq)
             buffer = cria_NodoTrie('\0');
             temp->filhos[i] = buffer;
             temp->filhos[i] = recuperaTRIE(temp->filhos[i], arq);
+        }
+    }
+    return raiz;
+}
+
+trie_string* recuperaTRIESTRING(trie_string* raiz, FILE* arq)
+{
+    // Funcao responsavel por recuperar um trie_string de um arquivo binario
+    char buffer_caracter;
+    int buffer_folha;
+    char buffer_especial;
+    int buffer_id;
+    std::vector<int> buffer_ids = {};
+    unsigned int buffer_tamanho;
+    trie_string* buffer_filhos[NTRIE];
+
+    trie_string* temp = raiz;
+    trie_string* buffer;
+
+    // Le as variaveis do arquivo binario
+    fread(&buffer_especial, sizeof(buffer_especial), 1, arq);
+    fread(&buffer_tamanho, sizeof(buffer_tamanho), 1, arq);
+    for (unsigned int i = 0; i < buffer_tamanho; i++)
+    {
+        fread(&buffer_id, sizeof(buffer_id), 1, arq);
+        buffer_ids.push_back(buffer_id);
+    }
+    fread(&buffer_caracter, sizeof(buffer_caracter), 1, arq);
+    fread(&buffer_folha, sizeof(buffer_folha), 1, arq);
+
+    temp->caracter = buffer_caracter;
+    temp->eh_folha = buffer_folha;
+    for (unsigned int i = 0; i < buffer_tamanho; i++)
+    {
+        temp->ids.push_back(buffer_ids[i]);
+    }
+    for (int i = 0; i < NTRIE; i++)
+    {
+        fread(&buffer_filhos[i], sizeof(buffer_filhos[i]), 1, arq);
+        temp->filhos[i] = buffer_filhos[i];
+        if (temp->filhos[i] != NULL)
+        {
+            // Aloca memoria e recursivamente continua lendo o arquivo
+            buffer = cria_trie_string('\0');
+            temp->filhos[i] = buffer;
+            temp->filhos[i] = recuperaTRIESTRING(temp->filhos[i], arq);
         }
     }
     return raiz;

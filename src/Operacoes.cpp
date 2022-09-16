@@ -178,6 +178,30 @@ void ordenaAnime(){
     armazenaTRIE(raiz_trie, arq_trie_escrita);
     fclose(arq_trie_escrita);
     free_NodoTrie(raiz_trie);
+
+    // Update dos arquivos invertidos
+    FILE *arq_licensors = NULL, *arq_genres = NULL, *arq_studios = NULL;
+    char nome_licensors[] = "licensors.bin", nome_genres[] = "genres.bin", nome_studios[] = "studios.bin";
+    trie_string* raiz_licensors = cria_trie_string('\0');
+    raiz_licensors = cria_arq_inv(raiz_licensors, LICENSORS);
+    AbreArquivo(&arq_licensors, nome_licensors, writeb);
+    armazenaTRIESTRING(raiz_licensors, arq_licensors);
+    fclose(arq_licensors);
+    free_trie_string(raiz_licensors);
+
+    trie_string* raiz_genres = cria_trie_string('\0');
+    raiz_genres = cria_arq_inv(raiz_genres, GENRES);
+    AbreArquivo(&arq_genres, nome_genres, writeb);
+    armazenaTRIESTRING(raiz_genres, arq_genres);
+    fclose(arq_genres);
+    free_trie_string(raiz_genres);
+
+    trie_string* raiz_studios = cria_trie_string('\0');
+    raiz_studios = cria_arq_inv(raiz_studios, STUDIOS);
+    AbreArquivo(&arq_studios, nome_studios, writeb);
+    armazenaTRIESTRING(raiz_studios, arq_studios);
+    fclose(arq_studios);
+    free_trie_string(raiz_studios);
 }
 
 void ordenaAnimeInverso(){
@@ -261,6 +285,30 @@ void ordenaAnimeInverso(){
     armazenaTRIE(raiz_trie, arq_trie_escrita);
     fclose(arq_trie_escrita);
     free_NodoTrie(raiz_trie);
+
+    // Update dos arquivos invertidos
+    char nome_licensors[] = "licensors.bin", nome_genres[] = "genres.bin", nome_studios[] = "studios.bin";
+    FILE *arq_licensors = NULL, *arq_genres = NULL, *arq_studios = NULL;
+    trie_string* raiz_licensors = cria_trie_string('\0');
+    raiz_licensors = cria_arq_inv(raiz_licensors, LICENSORS);
+    AbreArquivo(&arq_licensors, nome_licensors, writeb);
+    armazenaTRIESTRING(raiz_licensors, arq_licensors);
+    fclose(arq_licensors);
+    free_trie_string(raiz_licensors);
+
+    trie_string* raiz_genres = cria_trie_string('\0');
+    raiz_genres = cria_arq_inv(raiz_genres, GENRES);
+    AbreArquivo(&arq_genres, nome_genres, writeb);
+    armazenaTRIESTRING(raiz_genres, arq_genres);
+    fclose(arq_genres);
+    free_trie_string(raiz_genres);
+
+    trie_string* raiz_studios = cria_trie_string('\0');
+    raiz_studios = cria_arq_inv(raiz_studios, STUDIOS);
+    AbreArquivo(&arq_studios, nome_studios, writeb);
+    armazenaTRIESTRING(raiz_studios, arq_studios);
+    fclose(arq_studios);
+    free_trie_string(raiz_studios);
 }
 
 void deletaAnime(int id){
@@ -276,6 +324,9 @@ void deletaAnime(int id){
             dados_entrada_anime.push_back(buffer_anime);
             bpt_anime.insereBPTree(buffer_anime.id, i);
             i++;
+        }
+        else{
+            std::cout << "O anime " << buffer_anime.name << " foi deletado!" << std::endl << std::endl;
         }
         arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
     }while(!(arq_entrada.eof()));
@@ -304,12 +355,37 @@ void deletaAnime(int id){
         free(nome);
     }
 
+    // Update da TRIE
     char bin_trie_arq[] = "trie_anime.bin";
     FILE *bin_trie = NULL;
     AbreArquivo(&bin_trie, bin_trie_arq, writeb);
     armazenaTRIE(raiztrie_anime, bin_trie);
     fclose(bin_trie);
     free_NodoTrie(raiztrie_anime);
+
+    // Update dos arquivos invertidos
+    FILE *arq_licensors = NULL, *arq_genres = NULL, *arq_studios = NULL;
+    char nome_licensors[] = "licensors.bin", nome_genres[] = "genres.bin", nome_studios[] = "studios.bin";
+    trie_string* raiz_licensors = cria_trie_string('\0');
+    raiz_licensors = cria_arq_inv(raiz_licensors, LICENSORS);
+    AbreArquivo(&arq_licensors, nome_licensors, writeb);
+    armazenaTRIESTRING(raiz_licensors, arq_licensors);
+    fclose(arq_licensors);
+    free_trie_string(raiz_licensors);
+
+    trie_string* raiz_genres = cria_trie_string('\0');
+    raiz_genres = cria_arq_inv(raiz_genres, GENRES);
+    AbreArquivo(&arq_genres, nome_genres, writeb);
+    armazenaTRIESTRING(raiz_genres, arq_genres);
+    fclose(arq_genres);
+    free_trie_string(raiz_genres);
+
+    trie_string* raiz_studios = cria_trie_string('\0');
+    raiz_studios = cria_arq_inv(raiz_studios, STUDIOS);
+    AbreArquivo(&arq_studios, nome_studios, writeb);
+    armazenaTRIESTRING(raiz_studios, arq_studios);
+    fclose(arq_studios);
+    free_trie_string(raiz_studios);
 }
 
 // Geração de sequência de gaps para utilização na ordenação shellSort via CIURA
@@ -355,6 +431,7 @@ trie_string* cria_arq_inv(trie_string* raiz, int tipo)
             raiz = insert_trie_string(raiz, dados_entrada_anime[i].genres, i);
         }
     }
+
     else if (tipo == LICENSORS)
     {   // Se escolhido licensors, o arquivo invertido sera de licenciadores
         for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
@@ -373,10 +450,11 @@ trie_string* cria_arq_inv(trie_string* raiz, int tipo)
     return raiz;
 }
 
-void Busca_Um_Campo(char* nome, trie_string* raiz){
+void Busca_Um_Campo(char* nome, int tipo){
     std::vector<Anime> dados_entrada_anime;
     Anime buffer_anime;
     std::ifstream arq_entrada;
+    char nome_genres[] = "genres.bin", nome_studios[] = "studios.bin", readbinary[] = "rb";
     arq_entrada.open("anime.bin", std::ios::binary);
     arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
     do{
@@ -384,15 +462,34 @@ void Busca_Um_Campo(char* nome, trie_string* raiz){
         arq_entrada.read((char *) &buffer_anime, sizeof(Anime));
     }while(!(arq_entrada.eof()));
     arq_entrada.close();
+
+    // Leitura de trie_string
+    trie_string* raiz = cria_trie_string('\0');
+    if (tipo == GENRES)
+    {
+        FILE* arq_genres = NULL;
+        AbreArquivo(&arq_genres, nome_genres, readbinary);
+        raiz = recuperaTRIESTRING(raiz, arq_genres);
+        fclose(arq_genres);
+    } else if (tipo == STUDIOS)
+    {
+        FILE* arq_studios = NULL;
+        AbreArquivo(&arq_studios, nome_studios, readbinary);
+        raiz = recuperaTRIESTRING(raiz, arq_studios);
+        fclose(arq_studios);
+    }
+
+
     std::vector<int> ids;
     ids = busca_trie_string(raiz, nome);
     for (unsigned int i = 0; i < ids.size(); i++)
     {
         dados_entrada_anime[ids[i]].printaAnime();
     }
+    free_trie_string(raiz);
 }
 
-void Busca_Dois_Campos(char* nome1, char* nome2, trie_string* raiz1, trie_string* raiz2)
+void Busca_Dois_Campos(char* nome1, char* nome2)
 {
     // Funcao que proporciona a busca por um determinado registro Anime
     // por dois campos diferentes, ou seja, busca o anime que tem nome1
@@ -405,7 +502,20 @@ void Busca_Dois_Campos(char* nome1, char* nome2, trie_string* raiz1, trie_string
     std::vector<int> ids1 = {};
     std::vector<int> ids2 = {};
     std::vector<int> ids_conjunto = {};
-    char nome_anime_bin[] = "anime.bin", readingbinary[] = "rb";
+    char nome_anime_bin[] = "anime.bin", readingbinary[] = "rb", nome_genres[] = "genres.bin", nome_licensors[] = "licensors.bin";
+
+    // Gera as 2 estruturas trie_string
+    trie_string* raiz1 = cria_trie_string('\0');
+    FILE* arq_genres = NULL;
+    AbreArquivo(&arq_genres, nome_genres, readingbinary);
+    raiz1 = recuperaTRIESTRING(raiz1, arq_genres);
+    fclose(arq_genres);
+
+    trie_string* raiz2 = cria_trie_string('\0');
+    FILE* arq_licensors = NULL;
+    AbreArquivo(&arq_licensors, nome_licensors, readingbinary);
+    raiz2 = recuperaTRIESTRING(raiz2, arq_licensors);
+    fclose(arq_licensors);
 
     // Obtem o vetor de indices que contem nome1 e nome2 nas TRIEs
     ids1 = busca_trie_string(raiz1, nome1);
@@ -437,9 +547,11 @@ void Busca_Dois_Campos(char* nome1, char* nome2, trie_string* raiz1, trie_string
     {
         dados_entrada_anime[ids_conjunto[i]].printaAnime();
     }
+    free_trie_string(raiz1);
+    free_trie_string(raiz2);
 }
 
-void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2, trie_string* raiz1)
+void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2)
 {
     // Funcao que proporciona a busca simultanea de dois itens do mesmo campo,
     // ou seja, encontra um determinado registro Anime que possua ou nome1 como
@@ -452,7 +564,14 @@ void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2, trie_string* raiz1)
     std::vector<int> ids1 = {};
     std::vector<int> ids2 = {};
     std::vector<int> ids_conjunto = {};
-    char nome_anime_bin[] = "anime.bin", readingbinary[] = "rb";
+    char nome_anime_bin[] = "anime.bin", readingbinary[] = "rb", nome_studios[] = "studios.bin";
+
+    // Le o arq trie_string de studios
+    trie_string* raiz1 = cria_trie_string('\0');
+    FILE* arq_studios = NULL;
+    AbreArquivo(&arq_studios, nome_studios, readingbinary);
+    raiz1 = recuperaTRIESTRING(raiz1, arq_studios);
+    fclose(arq_studios);
 
     ids1 = busca_trie_string(raiz1, nome1);
     ids2 = busca_trie_string(raiz1, nome2);
@@ -501,14 +620,16 @@ void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2, trie_string* raiz1)
     {
         dados_entrada_anime[ids_conjunto[i]].printaAnime();
     }
+    free_trie_string(raiz1);
 }
 
 
-void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
+void recomendaAnime(int id){
     // Leitura do arquivo
     std::vector<Anime> dados_entrada_anime;
     Anime buffer_anime_leitura;
     std::ifstream arq_entrada;
+    char nome_genres[] = "genres.bin", nome_studios[] = "studios.bin", readbinary[] = "rb";
     arq_entrada.open("anime.bin", std::ios::binary);
     arq_entrada.read((char *) &buffer_anime_leitura, sizeof(Anime));
     do{
@@ -516,6 +637,18 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
         arq_entrada.read((char *) &buffer_anime_leitura, sizeof(Anime));
     }while(!(arq_entrada.eof()));
     arq_entrada.close();
+
+    // Le o arquivo binario das trie_string e gera suas estruturas
+    trie_string* raiz_gen = cria_trie_string('\0');
+    trie_string* raiz_stu = cria_trie_string('\0');
+    FILE *arq_gen = NULL, *arq_stu = NULL;
+    AbreArquivo(&arq_gen, nome_genres, readbinary);
+    raiz_gen = recuperaTRIESTRING(raiz_gen, arq_gen);
+    fclose(arq_gen);
+    AbreArquivo(&arq_stu, nome_studios, readbinary);
+    raiz_stu = recuperaTRIESTRING(raiz_stu, arq_stu);
+    fclose(arq_stu);
+
     BPTree buffer_bpt(GRAU);
     int buffer_in, buffer_ch;
     std::ifstream arq_bpt;
@@ -608,4 +741,7 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
         }
     }
     std::cout << "Se voce gosta de: " << buffer_anime_leitura.name << std::endl << "Voce tambem vai gostar de: " << buffer_anime.name << "! (ID = " << buffer_anime.id << ")" << std::endl << std::endl;
+
+    free_trie_string(raiz_gen);
+    free_trie_string(raiz_stu);
 }
