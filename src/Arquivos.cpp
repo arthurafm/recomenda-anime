@@ -57,16 +57,13 @@ void ProcessaArquivoCSV(std::string nomecsv_anime, int bin_existe){
           Tais arquivos poderão ser organizados tanto de forma sequencial, quanto serial. Porém é obrigatório que sejam implementados índices de acesso que auxiliem
           na consulta a esses dados. */
 
-    // Criação das árvores B+
+    // Criação das árvores e Manipulação de arquivos binários
+    std::ofstream bin_anime;
+    bin_anime.open("anime.bin", std::ios::binary);
     BPTree bpt_anime(GRAU), bpt_manga(GRAU);
+    NodoTrie* raiztrie_anime = cria_NodoTrie('\0');
     for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
         bpt_anime.insereBPTree(dados_entrada_anime[i].id, i);
-    }
-
-    // Criacao da arvore TRIE
-    NodoTrie* raiztrie_anime = cria_NodoTrie('\0');
-    for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
-    {
         char* nome = (char*) calloc (strlen(dados_entrada_anime[i].name) + 1, sizeof(char));
         for (unsigned int j = 0; j < strlen(dados_entrada_anime[i].name); j++)
         {
@@ -74,12 +71,6 @@ void ProcessaArquivoCSV(std::string nomecsv_anime, int bin_existe){
         }
         raiztrie_anime = insert_trie(raiztrie_anime, nome, i);
         free(nome);
-    }
-
-    // Manipulação de arquivos binários
-    std::ofstream bin_anime;
-    bin_anime.open("anime.bin", std::ios::binary);
-    for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
         bin_anime.write(reinterpret_cast<char *>(&(dados_entrada_anime[i])), sizeof(dados_entrada_anime[i]));
     }
     bin_anime.close();

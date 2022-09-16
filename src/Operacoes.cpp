@@ -526,7 +526,7 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
     std::vector<std::pair<int, int>> vetor_proximidade;
     std::pair<int, int> par_buffer;
     unsigned int i;
-    char string_gen[200], string_stu[200], *string_buffer, str_shounen[] = "shounen", str_seinen[] = "seinen", str_shoujo[] = "shoujo";
+    char string_gen[200], string_stu[200], *string_buffer;
     buffer_anime_leitura = dados_entrada_anime[buffer_in];
     strcpy(string_gen, buffer_anime_leitura.genres);
     strcpy(string_stu, buffer_anime_leitura.studios);
@@ -536,34 +536,17 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
     string_buffer = strtok(string_gen, ";.,");
     while(string_buffer != NULL){
         ids_gen = busca_trie_string(raiz_gen, string_buffer);
-        if((strcmp(string_buffer, str_shounen) == 0) || (strcmp(string_buffer, str_seinen) == 0) || (strcmp(string_buffer, str_shoujo) == 0)){ // Esses generos dão pontuação maior
-            for(unsigned int j = 0; j < ids_gen.size(); j++){
-                par_buffer.first = ids_gen[j];
-                par_buffer.second = 6;
-                for(i = 0; i < vetor_proximidade.size(); i++){
-                    if(vetor_proximidade[i].first == par_buffer.first){
-                        vetor_proximidade[i].second += par_buffer.second;
-                        break;
-                    }
-                }
-                if(i == vetor_proximidade.size()){
-                    vetor_proximidade.push_back(par_buffer);
+        for(unsigned int j = 0; j < ids_gen.size(); j++){
+            par_buffer.first = ids_gen[j];
+            par_buffer.second = 5;
+            for(i = 0; i < vetor_proximidade.size(); i++){
+                if(vetor_proximidade[i].first == par_buffer.first){
+                    vetor_proximidade[i].second += par_buffer.second;
+                    break;
                 }
             }
-        }
-        else{
-            for(unsigned int j = 0; j < ids_gen.size(); j++){
-                par_buffer.first = ids_gen[j];
-                par_buffer.second = 5;
-                for(i = 0; i < vetor_proximidade.size(); i++){
-                    if(vetor_proximidade[i].first == par_buffer.first){
-                        vetor_proximidade[i].second += par_buffer.second;
-                        break;
-                    }
-                }
-                if(i == vetor_proximidade.size()){
-                    vetor_proximidade.push_back(par_buffer);
-                }
+            if(i == vetor_proximidade.size()){
+                vetor_proximidade.push_back(par_buffer);
             }
         }
         ids_gen.erase(ids_gen.begin(), ids_gen.end());
