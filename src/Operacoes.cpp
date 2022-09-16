@@ -840,7 +840,7 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
         ids_gen = busca_trie_string(raiz_gen, string_buffer); // Está retornando valores errados
         if((strcmp(string_buffer, "shounen") == 0) || (strcmp(string_buffer, "seinen") == 0) || (strcmp(string_buffer, "shoujo") == 0)){ // Esses generos dão pontuação maior
             for(unsigned int j = 0; j < ids_gen.size(); j++){
-                par_buffer.first = ids_gen[i];
+                par_buffer.first = ids_gen[j];
                 par_buffer.second = 15;
                 for(i = 0; i < vetor_proximidade.size(); i++){
                     if(vetor_proximidade[i].first == par_buffer.first){
@@ -855,7 +855,7 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
         }
         else{
             for(unsigned int j = 0; j < ids_gen.size(); j++){
-                par_buffer.first = ids_gen[i];
+                par_buffer.first = ids_gen[j];
                 par_buffer.second = 10;
                 for(i = 0; i < vetor_proximidade.size(); i++){
                     if(vetor_proximidade[i].first == par_buffer.first){
@@ -877,7 +877,7 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
     while(string_buffer != NULL){
         ids_stu = busca_trie_string(raiz_stu, string_buffer); // Está retornando valores errados
         for(unsigned int j = 0; j < ids_stu.size(); j++){
-            par_buffer.first = ids_stu[i];
+            par_buffer.first = ids_stu[j];
             par_buffer.second = 15;
             for(i = 0; i < vetor_proximidade.size(); i++){
                 if(vetor_proximidade[i].first == par_buffer.first){
@@ -895,12 +895,14 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
 
     // Seleciona o similar de maior nota
     Anime buffer_anime;
+    int proximidade_buffer = 0;
     buffer_anime.score = 0.0;
     for(i = 0; i < vetor_proximidade.size(); i++){
         if(vetor_proximidade[i].second >= 45){
             if(vetor_proximidade[i].first != buffer_in){
-                if(dados_entrada_anime[vetor_proximidade[i].first].score >= buffer_anime.score){
+                if((dados_entrada_anime[vetor_proximidade[i].first].score * vetor_proximidade[i].second) >= (buffer_anime.score * proximidade_buffer)){
                     buffer_anime = dados_entrada_anime[vetor_proximidade[i].first];
+                    proximidade_buffer = vetor_proximidade[i].second;
                 }
             }
         }

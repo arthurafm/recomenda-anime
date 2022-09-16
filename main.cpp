@@ -9,7 +9,7 @@ int main()
           dados processados anteriormente. Se novos dados forem processados, eles devem ser adicionados aos já existentes. */
     int csv_cond = 0, csv_flag = 0;
     std::string csv_nome_anime, csv_nome_manga;
-    if(true){//if((ArquivoExiste("anime.bin") == -1) || (ArquivoExiste("manga.bin") == -1)){
+    if((ArquivoExiste("anime.bin") == -1) || (ArquivoExiste("manga.bin") == -1)){
 
     /* 1. Processar dados brutos provenientes da Web ou a partir de arquivos locais, do tipo TXT, CSV, HTML ou XML, os quais serão a fonte de dados inicial;
           O programa deve importar múltiplos documentos de entrada. */
