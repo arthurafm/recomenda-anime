@@ -22,15 +22,19 @@ int main()
     raiz_licensors = cria_arq_inv(raiz_licensors, LICENSORS);
     trie_string* raiz_genres = cria_trie_string('\0');
     raiz_genres = cria_arq_inv(raiz_genres, GENRES);
+    trie_string* raiz_studios = cria_trie_string('\0');
+    raiz_studios = cria_arq_inv(raiz_studios, STUDIOS);
 
     do{
         std::cout << "Selecione a operacao desejada:" << std::endl
         << "1: Recomendar Anime" << std::endl << "2: Buscar Anime" << std::endl << "3: Excluir Anime"
         << std::endl << "4: Top Anime ordenado" << std::endl << "5: Top Anime inverso" << std::endl
         << "6: Buscar Anime por prefixo" << std::endl << "7: Buscar Anime por genero e licensiador"
+        << std::endl << "8: Buscar Anime por dois studios"
         << std::endl << "-1: Recomendar Manga" << std::endl << "-2: Buscar Manga" << std::endl
         << "-3: Excluir Manga" << std::endl << "-4: Top Manga" << std::endl << "-5: Top Manga inverso"
         << std::endl << "-6: Buscar Manga por prefixo" << std::endl << "-7: Buscar Manga por dois campos"
+        << std::endl << "-8: Buscar Manga por dois do mesmo campo"
         << std::endl << std::endl << "0: Sair" << std::endl;
         std::cin >> op_code;
         switch(op_code){
@@ -72,6 +76,12 @@ int main()
                 std::cin >> nome2;
                 Busca_Dois_Campos(nome1, nome2, raiz_genres, raiz_licensors);
                 break;
+            case 8:
+                std::cout << "Digite o nome do studio 1: ";
+                std::cin >> nome1;
+                std::cout << "Digite o nome do studio 2: ";
+                std::cin >> nome2;
+                Busca_Dois_Mesmo_Campo(nome1, nome2, raiz_studios);
             case -1:
 
                 break;
@@ -105,6 +115,8 @@ int main()
                 break;
             case -7:
                 break;
+            case -8:
+                break;
             case 0:
                 op_code = 0;
                 break;
@@ -117,5 +129,6 @@ int main()
 
     free_trie_string(raiz_genres);
     free_trie_string(raiz_licensors);
+    free_trie_string(raiz_studios);
     return 0;
 }
