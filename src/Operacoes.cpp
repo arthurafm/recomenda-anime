@@ -58,7 +58,7 @@ void buscaAnimePorPrefixo(char* nome)
     NodoTrie* raiz = cria_NodoTrie('\0');
     NodoTrie* raiz_original = raiz;
     FILE *arqAnime, *arqTrie;
-    AbreArquivo(&arqTrie, "trie.bin", "rb");
+    AbreArquivo(&arqTrie, "trie_anime.bin", "rb");
     recuperaTRIE(raiz, arqTrie);
     fclose(arqTrie);
 
@@ -90,12 +90,12 @@ void buscaAnimePorPrefixo(char* nome)
         dados_entrada_anime.push_back(buffer_anime);
     }
     fclose(arqAnime);
-    pega_ids_anime(raiz, ids);
+    pega_ids(raiz, ids);
 
-    for (long long unsigned int i = 0; i < ids.size(); i++)
+    for (unsigned int i = 0; i < ids.size(); i++)
     {
         if (ids[i] != -1)
-            std::cout << "Encontrado: " << dados_entrada_anime[ids[i]].name << std::endl << "E seu ID: " << dados_entrada_anime[ids[i]].id << std::endl << "E seu indice: " << ids[i] << std::endl;
+            std::cout << "Encontrado: " << dados_entrada_anime[ids[i]].name << std::endl << "E seu ID: " << dados_entrada_anime[ids[i]].id << std::endl;
     }
     free_NodoTrie(raiz_original);
 }
@@ -106,7 +106,7 @@ void buscaMangaPorPrefixo(char* nome)
     NodoTrie* raiz = cria_NodoTrie('\0');
     NodoTrie* raiz_original = raiz;
     FILE *arqManga, *arqTrie;
-    AbreArquivo(&arqTrie, "trie.bin", "rb");
+    AbreArquivo(&arqTrie, "trie_manga.bin", "rb");
     recuperaTRIE(raiz, arqTrie);
     fclose(arqTrie);
 
@@ -138,7 +138,7 @@ void buscaMangaPorPrefixo(char* nome)
         dados_entrada_manga.push_back(buffer_manga);
     }
     fclose(arqManga);
-    pega_ids_manga(raiz, ids);
+    pega_ids(raiz, ids);
 
     for (long long unsigned int i = 0; i < ids.size(); i++)
     {
@@ -195,17 +195,6 @@ void ordenaAnime(){
         }
     }
 
-    // Update da TRIE
-    NodoTrie* raiz_trie = cria_NodoTrie('\0');
-    FILE *arq_trie_leitura = NULL;
-    AbreArquivo(&arq_trie_leitura, "trie.bin", "rb");
-    raiz_trie = recuperaTRIE(raiz_trie, arq_trie_leitura);
-    fclose(arq_trie_leitura);
-    for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
-    {
-        raiz_trie = atualiza_ids_anime(raiz_trie, dados_entrada_anime[i].name, i);
-    }
-
     // Escrita no arquivo binario
     BPTree bpt_anime(GRAU);
     std::ofstream bin_anime;
@@ -224,15 +213,26 @@ void ordenaAnime(){
     bpt_anime.armazenaBPTree(bpt_anime.getRaiz(), bin_bpt_anime);
     fclose(bin_bpt_anime);
 
-    FILE *arq_trie_escrita = NULL;
-    AbreArquivo(&arq_trie_escrita, "trie.bin", "wb");
-    armazenaTRIE(raiz_trie, arq_trie_escrita);
-    fclose(arq_trie_escrita);
-
     std::cout << std::endl << "TOP 3 ANIMES:" << std::endl;
     dados_entrada_anime[0].printaAnime();
     dados_entrada_anime[1].printaAnime();
     dados_entrada_anime[2].printaAnime();
+
+    // Update da TRIE
+    NodoTrie* raiz_trie = cria_NodoTrie('\0');
+    FILE *arq_trie_leitura = NULL;
+    AbreArquivo(&arq_trie_leitura, "trie_anime.bin", "rb");
+    raiz_trie = recuperaTRIE(raiz_trie, arq_trie_leitura);
+    fclose(arq_trie_leitura);
+    for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
+    {
+        raiz_trie = atualiza_ids(raiz_trie, dados_entrada_anime[i].name, i);
+    }
+    FILE *arq_trie_escrita = NULL;
+    AbreArquivo(&arq_trie_escrita, "trie_anime.bin", "wb");
+    armazenaTRIE(raiz_trie, arq_trie_escrita);
+    fclose(arq_trie_escrita);
+    free_NodoTrie(raiz_trie);
 }
 
 void ordenaAnimeInverso(){
@@ -279,17 +279,6 @@ void ordenaAnimeInverso(){
         }
     }
 
-    // Update da TRIE
-    NodoTrie* raiz_trie = cria_NodoTrie('\0');
-    FILE *arq_trie_leitura = NULL;
-    AbreArquivo(&arq_trie_leitura, "trie.bin", "rb");
-    raiz_trie = recuperaTRIE(raiz_trie, arq_trie_leitura);
-    fclose(arq_trie_leitura);
-    for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
-    {
-        raiz_trie = atualiza_ids_anime(raiz_trie, dados_entrada_anime[i].name, i);
-    }
-
     // Escrita no arquivo binario
     BPTree bpt_anime(GRAU);
     std::ofstream bin_anime;
@@ -305,15 +294,26 @@ void ordenaAnimeInverso(){
     bpt_anime.armazenaBPTree(bpt_anime.getRaiz(), bin_bpt_anime);
     fclose(bin_bpt_anime);
 
-    FILE *arq_trie_escrita = NULL;
-    AbreArquivo(&arq_trie_escrita, "trie.bin", "wb");
-    armazenaTRIE(raiz_trie, arq_trie_escrita);
-    fclose(arq_trie_escrita);
-
     std::cout << std::endl << "BOTTOM 3 ANIMES :" << std::endl;
     dados_entrada_anime[0].printaAnime();
     dados_entrada_anime[1].printaAnime();
     dados_entrada_anime[2].printaAnime();
+
+    // Update da TRIE
+    NodoTrie* raiz_trie = cria_NodoTrie('\0');
+    FILE *arq_trie_leitura = NULL;
+    AbreArquivo(&arq_trie_leitura, "trie_anime.bin", "rb");
+    raiz_trie = recuperaTRIE(raiz_trie, arq_trie_leitura);
+    fclose(arq_trie_leitura);
+    for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
+    {
+        raiz_trie = atualiza_ids(raiz_trie, dados_entrada_anime[i].name, i);
+    }
+    FILE *arq_trie_escrita = NULL;
+    AbreArquivo(&arq_trie_escrita, "trie_anime.bin", "wb");
+    armazenaTRIE(raiz_trie, arq_trie_escrita);
+    fclose(arq_trie_escrita);
+    free_NodoTrie(raiz_trie);
 }
 
 void ordenaManga(){
@@ -363,17 +363,6 @@ void ordenaManga(){
         }
     }
 
-    // Update da TRIE
-    NodoTrie* raiz_trie = cria_NodoTrie('\0');
-    FILE *arq_trie_leitura = NULL;
-    AbreArquivo(&arq_trie_leitura, "trie.bin", "rb");
-    raiz_trie = recuperaTRIE(raiz_trie, arq_trie_leitura);
-    fclose(arq_trie_leitura);
-    for (unsigned int i = 0; i < dados_entrada_manga.size(); i++)
-    {
-        raiz_trie = atualiza_ids_manga(raiz_trie, dados_entrada_manga[i].title, i);
-    }
-
     // Escrita no arquivo binario
     BPTree bpt_manga(GRAU);
     std::ofstream bin_manga;
@@ -392,15 +381,26 @@ void ordenaManga(){
     bpt_manga.armazenaBPTree(bpt_manga.getRaiz(), bin_bpt_manga);
     fclose(bin_bpt_manga);
 
-    FILE *arq_trie_escrita = NULL;
-    AbreArquivo(&arq_trie_escrita, "trie.bin", "wb");
-    armazenaTRIE(raiz_trie, arq_trie_escrita);
-    fclose(arq_trie_escrita);
-
     std::cout << std::endl << "TOP 3 MANGA:" << std::endl;
     dados_entrada_manga[0].printaManga();
     dados_entrada_manga[1].printaManga();
     dados_entrada_manga[2].printaManga();
+
+    // Update da TRIE
+    NodoTrie* raiz_trie = cria_NodoTrie('\0');
+    FILE *arq_trie_leitura = NULL;
+    AbreArquivo(&arq_trie_leitura, "trie_manga.bin", "rb");
+    raiz_trie = recuperaTRIE(raiz_trie, arq_trie_leitura);
+    fclose(arq_trie_leitura);
+    for (unsigned int i = 0; i < dados_entrada_manga.size(); i++)
+    {
+        raiz_trie = atualiza_ids(raiz_trie, dados_entrada_manga[i].title, i);
+    }
+    FILE *arq_trie_escrita = NULL;
+    AbreArquivo(&arq_trie_escrita, "trie_manga.bin", "wb");
+    armazenaTRIE(raiz_trie, arq_trie_escrita);
+    fclose(arq_trie_escrita);
+    free_NodoTrie(raiz_trie);
 }
 
 void ordenaMangaInverso(){
@@ -447,17 +447,6 @@ void ordenaMangaInverso(){
         }
     }
 
-    // Update da TRIE
-    NodoTrie* raiz_trie = cria_NodoTrie('\0');
-    FILE *arq_trie_leitura = NULL;
-    AbreArquivo(&arq_trie_leitura, "trie.bin", "rb");
-    raiz_trie = recuperaTRIE(raiz_trie, arq_trie_leitura);
-    fclose(arq_trie_leitura);
-    for (unsigned int i = 0; i < dados_entrada_manga.size(); i++)
-    {
-        raiz_trie = atualiza_ids_manga(raiz_trie, dados_entrada_manga[i].title, i);
-    }
-
     // Escrita no arquivo binario
     BPTree bpt_manga(GRAU);
     std::ofstream bin_manga;
@@ -473,15 +462,26 @@ void ordenaMangaInverso(){
     bpt_manga.armazenaBPTree(bpt_manga.getRaiz(), bin_bpt_manga);
     fclose(bin_bpt_manga);
 
-    FILE *arq_trie_escrita = NULL;
-    AbreArquivo(&arq_trie_escrita, "trie.bin", "wb");
-    armazenaTRIE(raiz_trie, arq_trie_escrita);
-    fclose(arq_trie_escrita);
-
     std::cout << std::endl << "TOP 3 MANGA:" << std::endl;
     dados_entrada_manga[0].printaManga();
     dados_entrada_manga[1].printaManga();
     dados_entrada_manga[2].printaManga();
+
+    // Update da TRIE
+    NodoTrie* raiz_trie = cria_NodoTrie('\0');
+    FILE *arq_trie_leitura = NULL;
+    AbreArquivo(&arq_trie_leitura, "trie_manga.bin", "rb");
+    raiz_trie = recuperaTRIE(raiz_trie, arq_trie_leitura);
+    fclose(arq_trie_leitura);
+    for (unsigned int i = 0; i < dados_entrada_manga.size(); i++)
+    {
+        raiz_trie = atualiza_ids(raiz_trie, dados_entrada_manga[i].title, i);
+    }
+    FILE *arq_trie_escrita = NULL;
+    AbreArquivo(&arq_trie_escrita, "trie_manga.bin", "wb");
+    armazenaTRIE(raiz_trie, arq_trie_escrita);
+    fclose(arq_trie_escrita);
+    free_NodoTrie(raiz_trie);
 }
 
 void deletaAnime(int id){
@@ -511,6 +511,25 @@ void deletaAnime(int id){
     AbreArquivo(&bpt, bpt_anime_arq, writeb);
     bpt_anime.armazenaBPTree(bpt_anime.getRaiz(), bpt);
     fclose(bpt);
+
+    /*NodoTrie* raiztrie_anime = cria_NodoTrie('\0');
+    for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
+    {
+        char* nome = (char*) calloc (strlen(dados_entrada_anime[i].name) + 1, sizeof(char));
+        for (unsigned int j = 0; j < strlen(dados_entrada_anime[i].name); j++)
+        {
+            nome[j] = dados_entrada_anime[i].name[j];
+        }
+        raiztrie_anime = insert_trie(raiztrie_anime, nome, i);
+        free(nome);
+    }
+
+    char bin_trie_arq[] = "trie_anime.bin";
+    FILE *bin_trie = NULL;
+    AbreArquivo(&bin_trie, bin_trie_arq, writeb);
+    armazenaTRIE(raiztrie_anime, bin_trie);
+    fclose(bin_trie);
+    free_NodoTrie(raiztrie_anime);*/
 }
 
 void deletaManga(int id){
@@ -586,6 +605,13 @@ trie_string* cria_arq_inv(trie_string* raiz, int tipo)
             raiz = insert_trie_string(raiz, dados_entrada_anime[i].licensors, i);
         }
     }
+    else if (tipo == STUDIOS)
+    {
+        for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
+        {
+            raiz = insert_trie_string(raiz, dados_entrada_anime[i].studios, i);
+        }
+    }
 
     return raiz;
 }
@@ -616,6 +642,58 @@ void Busca_Dois_Campos(char* nome1, char* nome2, trie_string* raiz1, trie_string
             if (ids1[i] == ids2[j])
             {
                 ids_conjunto.push_back(ids1[i]);
+            }
+        }
+    }
+
+    for (unsigned int i = 0; i < ids_conjunto.size(); i++)
+    {
+        dados_entrada_anime[ids_conjunto[i]].printaAnime();
+    }
+}
+
+void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2, trie_string* raiz1)
+{
+    FILE* arq_anime = NULL;
+    Anime buffer_anime;
+    std::vector<Anime> dados_entrada_anime;
+    std::vector<int> ids1 = {};
+    std::vector<int> ids2 = {};
+    std::vector<int> ids_conjunto = {};
+
+    ids1 = busca_trie_string(raiz1, nome1);
+    ids2 = busca_trie_string(raiz1, nome2);
+    AbreArquivo(&arq_anime, "anime.bin", "rb");
+
+    while(!feof(arq_anime)){
+        fread(&buffer_anime, sizeof(buffer_anime), 1, arq_anime);
+        dados_entrada_anime.push_back(buffer_anime);
+    }
+    fclose(arq_anime);
+
+    for (unsigned int i = 0; i < ids1.size(); i++)
+    {
+        ids_conjunto.push_back(ids1[i]);
+    }
+
+    for (unsigned int i = 0; i < ids2.size(); i++)
+    {
+        ids_conjunto.push_back(ids2[i]);
+    }
+
+    unsigned int tam = ids_conjunto.size();
+    for (unsigned int i = 0; i < tam; i++)
+    {
+        for (unsigned j = i + 1; j < tam; j++)
+        {
+            if (ids_conjunto[i] == ids_conjunto[j])
+            {
+                for (unsigned k = j; k < tam - 1; k++)
+                {
+                    ids_conjunto[k] = ids_conjunto[k+1];
+                }
+                tam--;
+                j--;
             }
         }
     }
