@@ -797,7 +797,6 @@ void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2, trie_string* raiz1)
 }
 
 
-// Incompleta
 void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
     // Leitura do arquivo
     std::vector<Anime> dados_entrada_anime;
@@ -821,6 +820,10 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
     }
     // Procura o id na bpt
     buffer_in = buffer_bpt.procuraBPTree(id);
+    if(buffer_in == -1){
+        std::cout << "ID invalido" << std::endl << std::endl;
+        return;
+    }
     arq_bpt.close();
 
     std::vector<std::pair<int, int>> vetor_proximidade;
@@ -833,7 +836,7 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
     strcpy(string_gen, buffer_anime_leitura.genres);
     strcpy(string_stu, buffer_anime_leitura.studios);
     std::vector<int> ids_gen = {}, ids_stu  = {};
-
+    int contador_aux = 0;
     // Procura registros de genero igual
     string_buffer = strtok(string_gen, ";.,");
     while(string_buffer != NULL){
@@ -841,7 +844,7 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
         if((strcmp(string_buffer, "shounen") == 0) || (strcmp(string_buffer, "seinen") == 0) || (strcmp(string_buffer, "shoujo") == 0)){ // Esses generos dão pontuação maior
             for(unsigned int j = 0; j < ids_gen.size(); j++){
                 par_buffer.first = ids_gen[j];
-                par_buffer.second = 15;
+                par_buffer.second = 6;
                 for(i = 0; i < vetor_proximidade.size(); i++){
                     if(vetor_proximidade[i].first == par_buffer.first){
                         vetor_proximidade[i].second += par_buffer.second;
@@ -856,7 +859,7 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
         else{
             for(unsigned int j = 0; j < ids_gen.size(); j++){
                 par_buffer.first = ids_gen[j];
-                par_buffer.second = 10;
+                par_buffer.second = 5;
                 for(i = 0; i < vetor_proximidade.size(); i++){
                     if(vetor_proximidade[i].first == par_buffer.first){
                         vetor_proximidade[i].second += par_buffer.second;
@@ -870,15 +873,16 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
         }
         ids_gen.erase(ids_gen.begin(), ids_gen.end());
         string_buffer = strtok(NULL, ";.,");
+        contador_aux++;
     }
 
     // Procura registros de estudio igual
     string_buffer = strtok(string_stu, ";.,");
     while(string_buffer != NULL){
-        ids_stu = busca_trie_string(raiz_stu, string_buffer); // Está retornando valores errados
+        ids_stu = busca_trie_string(raiz_stu, string_buffer);
         for(unsigned int j = 0; j < ids_stu.size(); j++){
             par_buffer.first = ids_stu[j];
-            par_buffer.second = 15;
+            par_buffer.second = 6;
             for(i = 0; i < vetor_proximidade.size(); i++){
                 if(vetor_proximidade[i].first == par_buffer.first){
                     vetor_proximidade[i].second += par_buffer.second;
@@ -891,6 +895,7 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
         }
         ids_stu.erase(ids_stu.begin(), ids_stu.end());
         string_buffer = strtok(NULL, ";.,");
+        contador_aux++;
     }
 
     // Seleciona o similar de maior nota
@@ -898,7 +903,7 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
     int proximidade_buffer = 0;
     buffer_anime.score = 0.0;
     for(i = 0; i < vetor_proximidade.size(); i++){
-        if(vetor_proximidade[i].second >= 45){
+        if(vetor_proximidade[i].second >= (contador_aux * 3)){
             if(vetor_proximidade[i].first != buffer_in){
                 if((dados_entrada_anime[vetor_proximidade[i].first].score * vetor_proximidade[i].second) >= (buffer_anime.score * proximidade_buffer)){
                     buffer_anime = dados_entrada_anime[vetor_proximidade[i].first];
