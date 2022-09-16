@@ -62,8 +62,7 @@ struct NodoTrie {
     char caracter;
     NodoTrie* filhos[NTRIE];
     int eh_folha;
-    int indexanime;
-    int indexmanga;
+    int index;
 };
 
 typedef struct trie_string trie_string;
@@ -83,11 +82,11 @@ void free_NodoTrie(NodoTrie* nodo);
 
 void free_trie_string(trie_string* raiz);
 
-NodoTrie* insert_trie(NodoTrie* raiz, char* name, int index, int anime_ou_manga);
+NodoTrie* insert_trie(NodoTrie* raiz, char* name, int index);
 
 trie_string* insert_trie_string(trie_string* raiz, char* name, int index);
 
-int busca_trie(NodoTrie* raiz, char* name, int anime_ou_manga);
+int busca_trie(NodoTrie* raiz, char* name);
 
 std::vector<int> busca_trie_string(trie_string* raiz, char* name);
 
@@ -103,15 +102,11 @@ void print_trie(NodoTrie* raiz);
 
 void print_trie_string(trie_string* raiz);
 
-void print_nome(NodoTrie* raiz, char* name, int anime_ou_manga);
+void print_nome(NodoTrie* raiz, char* name);
 
-void pega_ids_anime(NodoTrie* raiz, std::vector <int> &ids);
+void pega_ids(NodoTrie* raiz, std::vector <int> &ids);
 
-void pega_ids_manga(NodoTrie* raiz, std::vector <int> &ids);
-
-NodoTrie* atualiza_ids_anime(NodoTrie* raiz, char* name, int index);
-
-NodoTrie* atualiza_ids_manga(NodoTrie* raiz, char* name, int index);
+NodoTrie* atualiza_ids(NodoTrie* raiz, char* name, int index);
 
 void armazenaTRIE(NodoTrie *raiz, FILE *arq);
 
