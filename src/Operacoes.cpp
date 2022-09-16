@@ -1,22 +1,25 @@
 #include "../include/Operacoes.h"
 
 void buscaAnimePorID(int id){
+    // Funcao responsavel por buscar animes pelo seu ID
     Anime buffer_anime;
     BPTree buffer_bpt(GRAU);
     int buffer_ch, buffer_in;
     std::ifstream arq, arq_bpt;
+    // Le o arquivo binario das bpt e gera sua estrutura
     arq_bpt.open("bpt_anime.bin", std::ios::binary);
     while(!(arq_bpt.eof())){
         arq_bpt.read((char *) &buffer_ch, sizeof(int));
         arq_bpt.read((char *) &buffer_in, sizeof(int));
         buffer_bpt.insereBPTree(buffer_ch, buffer_in);
     }
+    // Procura o id na bpt
     buffer_in = buffer_bpt.procuraBPTree(id);
     arq_bpt.close();
-    if(buffer_in == -1){
+    if(buffer_in == -1){    // ID nao encontrado
         std::cout << "ID invalido" << std::endl << std::endl;
     }
-    else{
+    else{   // Encontra o anime em seu arquivo binario e o imprime
         arq.open("anime.bin", std::ios::binary);
         for(int i = 0; i <= buffer_in; i++){
             arq.read((char *) &buffer_anime, sizeof(Anime));
@@ -27,22 +30,25 @@ void buscaAnimePorID(int id){
 }
 
 void buscaMangaPorID(int id){
+    // Funcao responsavel por procurar um manga pelo seu ID
     Manga buffer_manga;
     BPTree buffer_bpt(GRAU);
     int buffer_ch, buffer_in;
     std::ifstream arq, arq_bpt;
+    // Abre o arquivo binario de bpt e gera sua estrutura
     arq_bpt.open("bpt_manga.bin", std::ios::binary);
     while(!(arq_bpt.eof())){
         arq_bpt.read((char *) &buffer_ch, sizeof(int));
         arq_bpt.read((char *) &buffer_in, sizeof(int));
         buffer_bpt.insereBPTree(buffer_ch, buffer_in);
     }
+    // Procura o ID na bpt
     buffer_in = buffer_bpt.procuraBPTree(id);
     arq_bpt.close();
     if(buffer_in == -1){
         std::cout << "ID invalido" << std::endl << std::endl;
     }
-    else{
+    else{   // Navega pelo arquivo binario de manga e o imprime
         arq.open("manga.bin", std::ios::binary);
         for(int i = 0; i <= buffer_in; i++){
             arq.read((char *) &buffer_manga, sizeof(Manga));
@@ -54,6 +60,10 @@ void buscaMangaPorID(int id){
 
 void buscaAnimePorPrefixo(char* nome)
 {
+    // Funcao responsavel por imprimir na tela todos os animes
+    // que inicam por "nome" e seus indices para futuras pesquisas
+
+    // Declaracao de variaveis e abertura do arquivo binario de TRIE
     Anime buffer_anime;
     NodoTrie* raiz = cria_NodoTrie('\0');
     NodoTrie* raiz_original = raiz;
@@ -74,7 +84,7 @@ void buscaAnimePorPrefixo(char* nome)
                 raiz = raiz->filhos[j];
             }
             else
-            {
+            {   // Nao ha animes que iniciam por nome
                 std::cout << "Erro, nao ha animes que iniciam com " << nome << std::endl;
                 free_NodoTrie(raiz_original);
                 return;
@@ -82,6 +92,7 @@ void buscaAnimePorPrefixo(char* nome)
         }
     }
 
+    // Abre o binario de animes para recuperar os registros
     std::vector<Anime> dados_entrada_anime;
     std::vector<int> ids;
     AbreArquivo(&arqAnime, "anime.bin", "rb");
@@ -90,18 +101,23 @@ void buscaAnimePorPrefixo(char* nome)
         dados_entrada_anime.push_back(buffer_anime);
     }
     fclose(arqAnime);
+    // Coleta o vetor de indices para acessar diretamente no vetor dos registros
     pega_ids(raiz, ids);
 
     for (unsigned int i = 0; i < ids.size(); i++)
-    {
-        if (ids[i] != -1)
-            std::cout << "Encontrado: " << dados_entrada_anime[ids[i]].name << std::endl << "E seu ID: " << dados_entrada_anime[ids[i]].id << std::endl;
+    {   // Imprime todos os animes e seus respectivos IDs
+        std::cout << "Encontrado: " << dados_entrada_anime[ids[i]].name << std::endl << "E seu ID: " << dados_entrada_anime[ids[i]].id << std::endl;
     }
+    // Desaloca memoria da TRIE
     free_NodoTrie(raiz_original);
 }
 
 void buscaMangaPorPrefixo(char* nome)
 {
+    // Funcao responsavel por imprimir todos mangas que se
+    // iniciam por nome e seus respectivos IDs
+
+    // Abertura do arquivo TRIE correspondente
     Manga buffer_manga;
     NodoTrie* raiz = cria_NodoTrie('\0');
     NodoTrie* raiz_original = raiz;
@@ -122,7 +138,7 @@ void buscaMangaPorPrefixo(char* nome)
                 raiz = raiz->filhos[j];
             }
             else
-            {
+            {   // Nao ha mangas que iniciam com nome
                 std::cout << "Erro, nao ha mangas que iniciam com " << nome << std::endl;
                 free_NodoTrie(raiz_original);
                 return;
@@ -130,6 +146,8 @@ void buscaMangaPorPrefixo(char* nome)
         }
     }
 
+    // Abre arquivo de registros manga e coleta todos os indices
+    // em que nome eh prefixo
     std::vector<Manga> dados_entrada_manga;
     std::vector<int> ids;
     AbreArquivo(&arqManga, "manga.bin", "rb");
@@ -141,7 +159,7 @@ void buscaMangaPorPrefixo(char* nome)
     pega_ids(raiz, ids);
 
     for (long long unsigned int i = 0; i < ids.size(); i++)
-    {
+    {   // Imprime todos os mangas encontrados com seus respectivos IDs
         if (ids[i] != -1)
             std::cout << "Encontrado: " << dados_entrada_manga[ids[i]].title << std::endl << "E seu ID: " << dados_entrada_manga[ids[i]].id << std::endl;
     }
@@ -149,6 +167,9 @@ void buscaMangaPorPrefixo(char* nome)
 }
 
 void ordenaAnime(){
+    // Funcao responsavel por ordenar o vetor de ANIME
+    // e imprimir os top N (3) de acordo com seu ranking
+
     // Leitura do arquivo
     std::vector<Anime> dados_entrada_anime;
     Anime buffer_anime;
@@ -581,6 +602,10 @@ std::vector<int> geraSequenciaDeGaps(int tam){
 
 trie_string* cria_arq_inv(trie_string* raiz, int tipo)
 {
+    // Funcao responsavel por colocar alguns dados do registro Anime
+    // na forma de arquivo invertido para facilitar sua busca
+
+    // Abertura do vetor de registros
     FILE *arq_anime = NULL;
     Anime buffer_anime;
     std::vector<Anime> dados_entrada_anime;
@@ -592,21 +617,21 @@ trie_string* cria_arq_inv(trie_string* raiz, int tipo)
     fclose(arq_anime);
 
     if (tipo == GENRES)
-    {
+    {   // Se escolhido genres, o arquivo invertido sera de generos
         for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
         {
             raiz = insert_trie_string(raiz, dados_entrada_anime[i].genres, i);
         }
     }
     else if (tipo == LICENSORS)
-    {
+    {   // Se escolhido licensors, o arquivo invertido sera de licenciadores
         for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
         {
             raiz = insert_trie_string(raiz, dados_entrada_anime[i].licensors, i);
         }
     }
     else if (tipo == STUDIOS)
-    {
+    {   // Se escolhido studios, o arquivo invertido sera de studios
         for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
         {
             raiz = insert_trie_string(raiz, dados_entrada_anime[i].studios, i);
@@ -618,6 +643,11 @@ trie_string* cria_arq_inv(trie_string* raiz, int tipo)
 
 void Busca_Dois_Campos(char* nome1, char* nome2, trie_string* raiz1, trie_string* raiz2)
 {
+    // Funcao que proporciona a busca por um determinado registro Anime
+    // por dois campos diferentes, ou seja, busca o anime que tem nome1
+    // como propriedade 1 e nome2 como propriedade 2
+
+    // Declaracao de variaveis e vetores
     FILE* arq_anime = NULL;
     Anime buffer_anime;
     std::vector<Anime> dados_entrada_anime;
@@ -625,16 +655,19 @@ void Busca_Dois_Campos(char* nome1, char* nome2, trie_string* raiz1, trie_string
     std::vector<int> ids2 = {};
     std::vector<int> ids_conjunto = {};
 
+    // Obtem o vetor de indices que contem nome1 e nome2 nas TRIEs
     ids1 = busca_trie_string(raiz1, nome1);
     ids2 = busca_trie_string(raiz2, nome2);
     AbreArquivo(&arq_anime, "anime.bin", "rb");
 
+    // Carrega o vetor de registro Anime
     while(!feof(arq_anime)){
         fread(&buffer_anime, sizeof(buffer_anime), 1, arq_anime);
         dados_entrada_anime.push_back(buffer_anime);
     }
     fclose(arq_anime);
 
+    // Realiza uma interseccao dos valores encontrados
     for (unsigned int i = 0; i < ids1.size(); i++)
     {
         for (unsigned int j = 0; j < ids2.size(); j++)
@@ -646,6 +679,7 @@ void Busca_Dois_Campos(char* nome1, char* nome2, trie_string* raiz1, trie_string
         }
     }
 
+    // Imprime os animes que possuem ambas as propriedades
     for (unsigned int i = 0; i < ids_conjunto.size(); i++)
     {
         dados_entrada_anime[ids_conjunto[i]].printaAnime();
@@ -654,6 +688,11 @@ void Busca_Dois_Campos(char* nome1, char* nome2, trie_string* raiz1, trie_string
 
 void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2, trie_string* raiz1)
 {
+    // Funcao que proporciona a busca simultanea de dois itens do mesmo campo,
+    // ou seja, encontra um determinado registro Anime que possua ou nome1 como
+    // propriedade ou nome2 como propriedade de um certo campo
+
+    // Declaracao das variaveis e vetores
     FILE* arq_anime = NULL;
     Anime buffer_anime;
     std::vector<Anime> dados_entrada_anime;
@@ -665,12 +704,14 @@ void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2, trie_string* raiz1)
     ids2 = busca_trie_string(raiz1, nome2);
     AbreArquivo(&arq_anime, "anime.bin", "rb");
 
+    // Carrega do arquivo binario o vetor de registros Anime
     while(!feof(arq_anime)){
         fread(&buffer_anime, sizeof(buffer_anime), 1, arq_anime);
         dados_entrada_anime.push_back(buffer_anime);
     }
     fclose(arq_anime);
 
+    // Joga no vetor em comum todos os dados
     for (unsigned int i = 0; i < ids1.size(); i++)
     {
         ids_conjunto.push_back(ids1[i]);
@@ -682,6 +723,8 @@ void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2, trie_string* raiz1)
     }
 
     unsigned int tam = ids_conjunto.size();
+    // Deleta todos os valores repetidos que forem encontrados, resultando,
+    // assim, numa uniao entre os dois vetores de indices
     for (unsigned int i = 0; i < tam; i++)
     {
         for (unsigned j = i + 1; j < tam; j++)
@@ -698,6 +741,7 @@ void Busca_Dois_Mesmo_Campo(char* nome1, char* nome2, trie_string* raiz1)
         }
     }
 
+    // Imprime os registros Anime encontrados
     for (unsigned int i = 0; i < ids_conjunto.size(); i++)
     {
         dados_entrada_anime[ids_conjunto[i]].printaAnime();
