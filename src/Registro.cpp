@@ -162,63 +162,8 @@ Anime::Anime(){
 
 }
 
-
-// Construtor classe de Mangas
-Manga::Manga(std::string linha){
-    std::vector<std::string> row;
-    std::string word;
-
-    // Leitura de linhas, separando atributos
-    std::istringstream iss(linha);
-    while(getline(iss, word, ',')){
-        row.push_back(word);
-    }
-    // Set de atributos
-    strcpy(title, row[0].c_str());
-    id = std::stoi(row[1]);
-    strcpy(type, row[2].c_str());
-    if (row[3] == ""){
-        chapters = -1;
-    }
-    else{
-        chapters = std::stoi(row[3]);
-    }
-    if (row[4] == ""){
-        volumes = -1;
-    }
-    else{
-        volumes = std::stoi(row[4]);
-    }
-    strcpy(status, row[5].c_str());
-    strcpy(genres, row[6].c_str());
-    if (row[7] == ""){
-        score = -1;
-    }
-    else{
-        score = std::stof(row[7]);
-    }
-    if (row[8] == ""){
-        ranked = -1;
-    }
-    else{
-        ranked = std::stof(row[8]);
-    }
-    strcpy(author, row[9].c_str());
-    strcpy(serializations, row[10].c_str());
-}
-
-// Construtor para leitura de arquivos
-Manga::Manga(){
-
-}
-
 // Deconstrutor de classe Anime
 Anime::~Anime(){
-
-}
-
-// Desconstrutor de classe Manga
-Manga::~Manga(){
 
 }
 
@@ -363,39 +308,4 @@ void Anime::printaAnime()
     else{
         std::cout << "Notas 1: " << this->score1 << "\n" << std::endl;
     }
-}
-
-void Manga::printaManga()
-{
-    std::cout << std::endl << "ID: " << this->id << "\n";
-    std::cout << "Titulo do manga: " << this->title << "\n";
-    std::cout << "Tipo: " << this->type << "\n";
-    if(this->chapters == -1){
-        std::cout << "Capitulos: " << "Desconhecido" << "\n";
-    }
-    else{
-        std::cout << "Capitulos: " << this->chapters << "\n";
-    }
-    if(this->volumes == -1){
-        std::cout << "Volumes: " << "Desconhecido" << "\n";
-    }
-    else{
-        std::cout << "Volumes: " << this->volumes << "\n";
-    }
-    std::cout << "Estado atual: " << this->status << "\n";
-    std::cout << "Generos: " << this->genres << "\n";
-    if(this->score == -1){
-        std::cout << "Pontuacao de 1 a 10: " << "Desconhecida" << "\n";
-    }
-    else{
-        std::cout << "Pontuacao de 1 a 10: " << this->score << "\n";
-    }
-    if(this->ranked == -1){
-        std::cout << "Rank: " << "Desconhecido" << "\n";
-    }
-    else{
-        std::cout << "Rank: " << this->ranked << "\n";
-    }
-    std::cout << "Autor: " << this->author << "\n";
-    std::cout << "Serializacao: " << this->serializations << "\n" << std::endl;
 }

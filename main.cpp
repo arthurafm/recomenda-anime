@@ -8,31 +8,25 @@ int main()
     /* 3. Realizar a coleta e a persistência de dados de maneira incremental, o programa deve manter os dados nos arquivos e, ao carregar, o programa deve ler os
           dados processados anteriormente. Se novos dados forem processados, eles devem ser adicionados aos já existentes. */
     int csv_cond = 0, csv_flag = 0;
-    std::string csv_nome_anime, csv_nome_manga;
-    if((ArquivoExiste("anime.bin") == -1) || (ArquivoExiste("manga.bin") == -1)){
+    std::string csv_nome_anime;
+    if(ArquivoExiste("anime.bin") == -1){
 
     /* 1. Processar dados brutos provenientes da Web ou a partir de arquivos locais, do tipo TXT, CSV, HTML ou XML, os quais serão a fonte de dados inicial;
           O programa deve importar múltiplos documentos de entrada. */
-        std::cout << "Digite o nome do CSV de Anime: " << std::endl;
+        std::cout << "Digite o nome do CSV: " << std::endl;
         fflush(stdin);
         std::cin >> csv_nome_anime;
-        std::cout << "Digite o nome do CSV de Manga: " << std::endl;
-        fflush(stdin);
-        std::cin >> csv_nome_manga;
-        ProcessaArquivoCSV(csv_nome_anime, csv_nome_manga, csv_flag);
+        ProcessaArquivoCSV(csv_nome_anime, csv_flag);
     }
     else{
         std::cout << "Voce quer ler um CSV novo?\n1 para Sim, 0 para Nao" << std::endl;
         std::cin >> csv_cond;
         if(csv_cond == 1){
-            std::cout << "Digite o nome do CSV de Anime: " << std::endl;
+            std::cout << "Digite o nome do CSV: " << std::endl;
             fflush(stdin);
             std::cin >> csv_nome_anime;
-            std::cout << "Digite o nome do CSV de Manga: " << std::endl;
-            fflush(stdin);
-            std::cin >> csv_nome_manga;
             csv_flag = 1;
-            ProcessaArquivoCSV(csv_nome_anime, csv_nome_manga, csv_flag);
+            ProcessaArquivoCSV(csv_nome_anime, csv_flag);
         }
     }
 
@@ -55,10 +49,6 @@ int main()
         << "6: Buscar Anime por prefixo" << std::endl << "7: Buscar Anime por genero" << std::endl
         << "8: Buscar Anime por estudio" << std::endl << "9: Buscar Anime por genero e licensiador"
         << std::endl << "10: Buscar Anime por dois studios"
-        << std::endl << "-1: Recomendar Manga" << std::endl << "-2: Buscar Manga" << std::endl
-        << "-3: Excluir Manga" << std::endl << "-4: Top Manga" << std::endl << "-5: Top Manga inverso"
-        << std::endl << "-6: Buscar Manga por prefixo" << std::endl << "-7: Buscar Manga por dois campos"
-        << std::endl << "-8: Buscar Manga por dois do mesmo campo"
         << std::endl << std::endl << "0: Sair" << std::endl;
         std::cin >> op_code;
         switch(op_code){
@@ -130,43 +120,6 @@ int main()
                 fflush(stdin);
                 gets(nome2);
                 Busca_Dois_Mesmo_Campo(nome1, nome2, raiz_studios);
-            case -1:
-
-                break;
-                /* 5. Permitir a busca de informações dos arquivos locais por algum critério.
-                  (a) busca pela chave principal de um elemento é obrigatória. */
-            case -2:{
-                std::cout << "Digite o ID:";
-                std::cin >> id;
-                buscaMangaPorID(id);
-            }
-                break;
-                /* 1. Tratar exclusão de registros, o que envolve a implementação de funções para remover elementos das
-                      mais diversas estruturas de dados implementados. */
-            case -3:
-                std::cout << "Digite o ID:";
-                std::cin >> id;
-                deletaManga(id);
-                break;
-                /* 4. Permitir ao usuário classificar os dados dos arquivos locias em ordem normal e inversa;
-                  para visualização não ficar muito poluída, pode-se mostrar apenas os TOP N resultados ordenados. */
-            case -4:
-                ordenaManga();
-                break;
-            case -5:
-                ordenaMangaInverso();
-                break;
-                /* 2. Fazer buscas por prefixo */
-            case -6:
-                std::cout << "Digite o nome: ";
-                fflush(stdin);
-                gets(nome1);
-                buscaMangaPorPrefixo(nome1);
-                break;
-            case -7:
-                break;
-            case -8:
-                break;
             case 0:
                 op_code = 0;
                 break;
@@ -175,8 +128,6 @@ int main()
                 break;
         }
     }while(op_code != 0);
-
-
     free_trie_string(raiz_genres);
     free_trie_string(raiz_licensors);
     free_trie_string(raiz_studios);

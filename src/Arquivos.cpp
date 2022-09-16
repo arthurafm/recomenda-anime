@@ -28,15 +28,13 @@ short ArquivoExiste(std::string name){
 
 
 // Função que lê CSVs e cria arquivos binarios
-void ProcessaArquivoCSV(std::string nomecsv_anime, std::string nomecsv_manga, int bin_existe){
+void ProcessaArquivoCSV(std::string nomecsv_anime, int bin_existe){
     // Buffers de leitura de linha
     std::ifstream entrada_anime(nomecsv_anime);
-    std::ifstream entrada_manga(nomecsv_manga);
     std::string linha;
 
     // Declaracao do vetores de registros que contem a database
     std::vector<Anime> dados_entrada_anime;
-    std::vector<Manga> dados_entrada_manga;
 
     if(bin_existe == 1){ // Se o arquivo binário já existe, lê ele primeiro antes do CSV
         std::ifstream arq_entrada_bin;
@@ -49,14 +47,10 @@ void ProcessaArquivoCSV(std::string nomecsv_anime, std::string nomecsv_manga, in
         arq_entrada_bin.close();
     }
 
-    // Leitura do arquivo
+    // Leitura do arquivo CSV
     while(std::getline(entrada_anime, linha)){
         Anime reg1(linha);
         dados_entrada_anime.push_back(reg1);
-    }
-    while(std::getline(entrada_manga, linha)){
-        Manga reg2(linha);
-        dados_entrada_manga.push_back(reg2);
     }
 
     /* 2. Após coletar ou extrair os dados, o programa deverá usar arquivos binários próprios que armazenarão todos os dados, independentes dos arquivos originais.
@@ -68,13 +62,9 @@ void ProcessaArquivoCSV(std::string nomecsv_anime, std::string nomecsv_manga, in
     for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
         bpt_anime.insereBPTree(dados_entrada_anime[i].id, i);
     }
-    for(unsigned int i = 0; i < dados_entrada_manga.size(); i++){
-        bpt_manga.insereBPTree(dados_entrada_manga[i].id, i);
-    }
 
     // Criacao da arvore TRIE
     NodoTrie* raiztrie_anime = cria_NodoTrie('\0');
-    NodoTrie* raiztrie_manga = cria_NodoTrie('\0');
     for (unsigned int i = 0; i < dados_entrada_anime.size(); i++)
     {
         char* nome = (char*) calloc (strlen(dados_entrada_anime[i].name) + 1, sizeof(char));
@@ -86,51 +76,26 @@ void ProcessaArquivoCSV(std::string nomecsv_anime, std::string nomecsv_manga, in
         free(nome);
     }
 
-    for (unsigned int i = 0; i < dados_entrada_manga.size(); i++)
-    {
-        char* nome = (char*) calloc (strlen(dados_entrada_manga[i].title) + 1, sizeof(char));
-        for (unsigned int j = 0; j < strlen(dados_entrada_manga[i].title); j++)
-        {
-            nome[j] = dados_entrada_manga[i].title[j];
-        }
-        raiztrie_manga = insert_trie(raiztrie_manga, nome, i);
-        free(nome);
-    }
-
     // Manipulação de arquivos binários
-    std::ofstream bin_anime, bin_manga;
+    std::ofstream bin_anime;
     bin_anime.open("anime.bin", std::ios::binary);
-    bin_manga.open("manga.bin", std::ios::binary);
     for(unsigned int i = 0; i < dados_entrada_anime.size(); i++){
         bin_anime.write(reinterpret_cast<char *>(&(dados_entrada_anime[i])), sizeof(dados_entrada_anime[i]));
     }
-    for(unsigned int i = 0; i < dados_entrada_manga.size(); i++){
-        bin_manga.write(reinterpret_cast<char *>(&(dados_entrada_manga[i])), sizeof(dados_entrada_manga[i]));
-    }
     bin_anime.close();
-    bin_manga.close();
 
-    char bpt_anime_arq[] = "bpt_anime.bin", writeb[] = "wb", bpt_manga_arq[] = "bpt_manga.bin";
-    FILE *bin_bpt_anime = NULL, *bin_bpt_manga = NULL;
+    char bpt_anime_arq[] = "bpt_anime.bin", writeb[] = "wb";
+    FILE *bin_bpt_anime = NULL;
     AbreArquivo(&bin_bpt_anime, bpt_anime_arq, writeb);
     bpt_anime.armazenaBPTree(bpt_anime.getRaiz(), bin_bpt_anime);
     fclose(bin_bpt_anime);
-    AbreArquivo(&bin_bpt_manga, bpt_manga_arq, writeb);
-    bpt_manga.armazenaBPTree(bpt_manga.getRaiz(), bin_bpt_manga);
-    fclose(bin_bpt_manga);
 
     char bin_trie_arq1[] = "trie_anime.bin";
-    char bin_trie_arq2[] = "trie_manga.bin";
     FILE *bin_trie1 = NULL;
-    FILE *bin_trie2 = NULL;
     AbreArquivo(&bin_trie1, bin_trie_arq1, writeb);
     armazenaTRIE(raiztrie_anime, bin_trie1);
     fclose(bin_trie1);
     free_NodoTrie(raiztrie_anime);
-    AbreArquivo(&bin_trie2, bin_trie_arq2, writeb);
-    armazenaTRIE(raiztrie_manga, bin_trie2);
-    fclose(bin_trie2);
-    free_NodoTrie(raiztrie_manga);
 }
 
 Nodo::Nodo(std::size_t _grau){ // Construtor de Nodo

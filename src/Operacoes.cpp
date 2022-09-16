@@ -29,35 +29,6 @@ void buscaAnimePorID(int id){
     }
 }
 
-void buscaMangaPorID(int id){
-    // Funcao responsavel por procurar um manga pelo seu ID
-    Manga buffer_manga;
-    BPTree buffer_bpt(GRAU);
-    int buffer_ch, buffer_in;
-    std::ifstream arq, arq_bpt;
-    // Abre o arquivo binario de bpt e gera sua estrutura
-    arq_bpt.open("bpt_manga.bin", std::ios::binary);
-    while(!(arq_bpt.eof())){
-        arq_bpt.read((char *) &buffer_ch, sizeof(int));
-        arq_bpt.read((char *) &buffer_in, sizeof(int));
-        buffer_bpt.insereBPTree(buffer_ch, buffer_in);
-    }
-    // Procura o ID na bpt
-    buffer_in = buffer_bpt.procuraBPTree(id);
-    arq_bpt.close();
-    if(buffer_in == -1){
-        std::cout << "ID invalido" << std::endl << std::endl;
-    }
-    else{   // Navega pelo arquivo binario de manga e o imprime
-        arq.open("manga.bin", std::ios::binary);
-        for(int i = 0; i <= buffer_in; i++){
-            arq.read((char *) &buffer_manga, sizeof(Manga));
-        }
-        arq.close();
-        buffer_manga.printaManga();
-    }
-}
-
 void buscaAnimePorPrefixo(char* nome)
 {
     // Funcao responsavel por imprimir na tela todos os animes
@@ -111,62 +82,6 @@ void buscaAnimePorPrefixo(char* nome)
         std::cout << "Encontrado: " << dados_entrada_anime[ids[i]].name << std::endl << "E seu ID: " << dados_entrada_anime[ids[i]].id << std::endl;
     }
     // Desaloca memoria da TRIE
-    free_NodoTrie(raiz_original);
-}
-
-void buscaMangaPorPrefixo(char* nome)
-{
-    // Funcao responsavel por imprimir todos mangas que se
-    // iniciam por nome e seus respectivos IDs
-
-    // Abertura do arquivo TRIE correspondente
-    Manga buffer_manga;
-    NodoTrie* raiz = cria_NodoTrie('\0');
-    NodoTrie* raiz_original = raiz;
-    FILE *arqManga, *arqTrie;
-    char nome_trie_bin[] = "trie_manga.bin", readbinary[] = "rb";
-    AbreArquivo(&arqTrie, nome_trie_bin, readbinary);
-    recuperaTRIE(raiz, arqTrie);
-    fclose(arqTrie);
-
-    for(int i=0; nome[i]!='\0'; i++)
-    {
-        if (nome[i] <= 'Z' && nome[i] >= 'A')
-        {
-            nome[i] += 32;
-        }
-        if(nome[i] <= 'z' && nome[i] >= 'a'){
-            int j = nome[i] - 'a';
-            if (raiz->filhos[j] != NULL){
-                raiz = raiz->filhos[j];
-            }
-            else
-            {   // Nao ha mangas que iniciam com nome
-                std::cout << "Erro, nao ha mangas que iniciam com " << nome << std::endl;
-                free_NodoTrie(raiz_original);
-                return;
-            }
-        }
-    }
-
-    // Abre arquivo de registros manga e coleta todos os indices
-    // em que nome eh prefixo
-    std::vector<Manga> dados_entrada_manga;
-    std::vector<int> ids;
-    char nome_anime_bin[] = "manga.bin";
-    AbreArquivo(&arqManga, nome_anime_bin, readbinary);
-    while(!feof(arqManga)){
-        fread(&buffer_manga, sizeof(buffer_manga), 1, arqManga);
-        dados_entrada_manga.push_back(buffer_manga);
-    }
-    fclose(arqManga);
-    pega_ids(raiz, ids);
-
-    for (long long unsigned int i = 0; i < ids.size(); i++)
-    {   // Imprime todos os mangas encontrados com seus respectivos IDs
-        if (ids[i] != -1)
-            std::cout << "Encontrado: " << dados_entrada_manga[ids[i]].title << std::endl << "E seu ID: " << dados_entrada_manga[ids[i]].id << std::endl;
-    }
     free_NodoTrie(raiz_original);
 }
 
@@ -343,176 +258,6 @@ void ordenaAnimeInverso(){
     free_NodoTrie(raiz_trie);
 }
 
-void ordenaManga(){
-    // Leitura do arquivo
-    std::vector<Manga> dados_entrada_manga;
-    Manga buffer_manga;
-    std::ifstream arq_entrada;
-    arq_entrada.open("manga.bin", std::ios::binary);
-    while(!(arq_entrada.eof())){
-        arq_entrada.read((char *) &buffer_manga, sizeof(Manga));
-        dados_entrada_manga.push_back(buffer_manga);
-    }
-    arq_entrada.close();
-
-    // Ordenação via shellSort usando o ranking como parametro
-    int tamanhogaps;
-    int n = dados_entrada_manga.size();
-    int i = 0, j, k, l, h = 1;
-    std::vector<int> sequenciaDeGaps = geraSequenciaDeGaps(n);
-    tamanhogaps = sequenciaDeGaps.size();
-    do{
-        i++;
-    }while(i < tamanhogaps);
-    i = i - 2;
-    h = sequenciaDeGaps[i];
-    while(h >= 1){
-        for(j = 0; j < h; j++){
-            for(k = j + h; k < n; k = k + h){
-                if((dados_entrada_manga[k].ranked == -1) || (dados_entrada_manga[k].ranked == 0)){ // Caso a informação for desconhecida, joga para o fim
-                    dados_entrada_manga[k].ranked = 99999;
-                }
-                buffer_manga = dados_entrada_manga[k];
-                l = k - h;
-                while((l >= 0) && (dados_entrada_manga[l].ranked > buffer_manga.ranked)){
-                    dados_entrada_manga[l + h] = dados_entrada_manga[l];
-                    l = l - h;
-                }
-                dados_entrada_manga[l + h] = buffer_manga;
-            }
-        }
-        if(i != 0){
-            i--;
-            h = sequenciaDeGaps[i];
-        }
-        else{
-            h = 0;
-        }
-    }
-
-    // Escrita no arquivo binario
-    BPTree bpt_manga(GRAU);
-    std::ofstream bin_manga;
-    bin_manga.open("manga.bin", std::ios::binary);
-    for(unsigned int i = 0; i < dados_entrada_manga.size(); i++){
-        if(dados_entrada_manga[i].ranked == 99999){ // Correção
-            dados_entrada_manga[i].ranked = -1;
-        }
-        bpt_manga.insereBPTree(dados_entrada_manga[i].id, i);
-        bin_manga.write(reinterpret_cast<char *>(&(dados_entrada_manga[i])), sizeof(dados_entrada_manga[i]));
-    }
-    bin_manga.close();
-    char bpt_manga_arq[] = "bpt_manga.bin", writeb[] = "wb";
-    FILE *bin_bpt_manga = NULL;
-    AbreArquivo(&bin_bpt_manga, bpt_manga_arq, writeb);
-    bpt_manga.armazenaBPTree(bpt_manga.getRaiz(), bin_bpt_manga);
-    fclose(bin_bpt_manga);
-
-    std::cout << std::endl << "TOP 3 MANGA:" << std::endl;
-    dados_entrada_manga[0].printaManga();
-    dados_entrada_manga[1].printaManga();
-    dados_entrada_manga[2].printaManga();
-
-    // Update da TRIE
-    NodoTrie* raiz_trie = cria_NodoTrie('\0');
-    FILE *arq_trie_leitura = NULL;
-    char nome_trie_bin[] = "trie_manga.bin", readbinary[] = "rb";
-    AbreArquivo(&arq_trie_leitura, nome_trie_bin, readbinary);
-    raiz_trie = recuperaTRIE(raiz_trie, arq_trie_leitura);
-    fclose(arq_trie_leitura);
-    for (unsigned int i = 0; i < dados_entrada_manga.size(); i++)
-    {
-        raiz_trie = atualiza_ids(raiz_trie, dados_entrada_manga[i].title, i);
-    }
-    FILE *arq_trie_escrita = NULL;
-    AbreArquivo(&arq_trie_escrita, nome_trie_bin, writeb);
-    armazenaTRIE(raiz_trie, arq_trie_escrita);
-    fclose(arq_trie_escrita);
-    free_NodoTrie(raiz_trie);
-}
-
-void ordenaMangaInverso(){
-    // Leitura do arquivo
-    std::vector<Manga> dados_entrada_manga;
-    Manga buffer_manga;
-    std::ifstream arq_entrada;
-    arq_entrada.open("manga.bin", std::ios::binary);
-    while(!(arq_entrada.eof())){
-        arq_entrada.read((char *) &buffer_manga, sizeof(Manga));
-        dados_entrada_manga.push_back(buffer_manga);
-    }
-    arq_entrada.close();
-
-    // Ordenação via shellSort usando o ranking como parametro
-    int tamanhogaps;
-    int n = dados_entrada_manga.size();
-    int i = 0, j, k, l, h = 1;
-    std::vector<int> sequenciaDeGaps = geraSequenciaDeGaps(n);
-    tamanhogaps = sequenciaDeGaps.size();
-    do{
-        i++;
-    }while(i < tamanhogaps);
-    i = i - 2;
-    h = sequenciaDeGaps[i];
-    while(h >= 1){
-        for(j = 0; j < h; j++){
-            for(k = j + h; k < n; k = k + h){
-                buffer_manga = dados_entrada_manga[k];
-                l = k - h;
-                while((l >= 0) && (dados_entrada_manga[l].ranked < buffer_manga.ranked)){
-                    dados_entrada_manga[l + h] = dados_entrada_manga[l];
-                    l = l - h;
-                }
-                dados_entrada_manga[l + h] = buffer_manga;
-            }
-        }
-        if(i != 0){
-            i--;
-            h = sequenciaDeGaps[i];
-        }
-        else{
-            h = 0;
-        }
-    }
-
-    // Escrita no arquivo binario
-    BPTree bpt_manga(GRAU);
-    std::ofstream bin_manga;
-    bin_manga.open("manga.bin", std::ios::binary);
-    for(unsigned int i = 0; i < dados_entrada_manga.size(); i++){
-        bpt_manga.insereBPTree(dados_entrada_manga[i].id, i);
-        bin_manga.write(reinterpret_cast<char *>(&(dados_entrada_manga[i])), sizeof(dados_entrada_manga[i]));
-    }
-    bin_manga.close();
-    char bpt_manga_arq[] = "bpt_manga.bin", writeb[] = "wb";
-    FILE *bin_bpt_manga = NULL;
-    AbreArquivo(&bin_bpt_manga, bpt_manga_arq, writeb);
-    bpt_manga.armazenaBPTree(bpt_manga.getRaiz(), bin_bpt_manga);
-    fclose(bin_bpt_manga);
-
-    std::cout << std::endl << "TOP 3 MANGA:" << std::endl;
-    dados_entrada_manga[0].printaManga();
-    dados_entrada_manga[1].printaManga();
-    dados_entrada_manga[2].printaManga();
-
-    // Update da TRIE
-    NodoTrie* raiz_trie = cria_NodoTrie('\0');
-    FILE *arq_trie_leitura = NULL;
-    char nome_trie_bin[] = "trie_manga.bin", readbinary[] = "rb";
-    AbreArquivo(&arq_trie_leitura, nome_trie_bin, readbinary);
-    raiz_trie = recuperaTRIE(raiz_trie, arq_trie_leitura);
-    fclose(arq_trie_leitura);
-    for (unsigned int i = 0; i < dados_entrada_manga.size(); i++)
-    {
-        raiz_trie = atualiza_ids(raiz_trie, dados_entrada_manga[i].title, i);
-    }
-    FILE *arq_trie_escrita = NULL;
-    AbreArquivo(&arq_trie_escrita, nome_trie_bin, writeb);
-    armazenaTRIE(raiz_trie, arq_trie_escrita);
-    fclose(arq_trie_escrita);
-    free_NodoTrie(raiz_trie);
-}
-
 void deletaAnime(int id){
     std::vector<Anime> dados_entrada_anime;
     Anime buffer_anime;
@@ -559,54 +304,6 @@ void deletaAnime(int id){
     armazenaTRIE(raiztrie_anime, bin_trie);
     fclose(bin_trie);
     free_NodoTrie(raiztrie_anime);
-}
-
-void deletaManga(int id){
-    std::vector<Manga> dados_entrada_manga;
-    Manga buffer_manga;
-    BPTree bpt_manga(GRAU);
-    std::ifstream arq_entrada;
-    unsigned int i = 0;
-    arq_entrada.open("manga.bin", std::ios::binary);
-    while(!(arq_entrada.eof())){
-        arq_entrada.read((char *) &buffer_manga, sizeof(Manga));
-        if(buffer_manga.id != id){
-            dados_entrada_manga.push_back(buffer_manga);
-            bpt_manga.insereBPTree(buffer_manga.id, i);
-            i++;
-        }
-    }
-    arq_entrada.close();
-    std::ofstream bin_manga;
-    bin_manga.open("manga.bin", std::ios::binary);
-    for(i = 0; i < dados_entrada_manga.size(); i++){
-        bin_manga.write(reinterpret_cast<char *>(&(dados_entrada_manga[i])), sizeof(dados_entrada_manga[i]));
-    }
-    bin_manga.close();
-    FILE *bpt = nullptr;
-    char bpt_manga_arq[] = "bpt_manga.bin", writeb[] = "wb";
-    AbreArquivo(&bpt, bpt_manga_arq, writeb);
-    bpt_manga.armazenaBPTree(bpt_manga.getRaiz(), bpt);
-    fclose(bpt);
-
-    NodoTrie* raiztrie_manga = cria_NodoTrie('\0');
-    for (unsigned int i = 0; i < dados_entrada_manga.size(); i++)
-    {
-        char* nome = (char*) calloc (strlen(dados_entrada_manga[i].title) + 1, sizeof(char));
-        for (unsigned int j = 0; j < strlen(dados_entrada_manga[i].title); j++)
-        {
-            nome[j] = dados_entrada_manga[i].title[j];
-        }
-        raiztrie_manga = insert_trie(raiztrie_manga, nome, i);
-        free(nome);
-    }
-
-    char bin_trie_arq[] = "trie_manga.bin";
-    FILE *bin_trie = NULL;
-    AbreArquivo(&bin_trie, bin_trie_arq, writeb);
-    armazenaTRIE(raiztrie_manga, bin_trie);
-    fclose(bin_trie);
-    free_NodoTrie(raiztrie_manga);
 }
 
 // Geração de sequência de gaps para utilização na ordenação shellSort via CIURA
@@ -829,9 +526,7 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
     std::vector<std::pair<int, int>> vetor_proximidade;
     std::pair<int, int> par_buffer;
     unsigned int i;
-    char string_gen[200];
-    char string_stu[200];
-    char *string_buffer;
+    char string_gen[200], string_stu[200], *string_buffer, str_shounen[] = "shounen", str_seinen[] = "seinen", str_shoujo[] = "shoujo";
     buffer_anime_leitura = dados_entrada_anime[buffer_in];
     strcpy(string_gen, buffer_anime_leitura.genres);
     strcpy(string_stu, buffer_anime_leitura.studios);
@@ -840,8 +535,8 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
     // Procura registros de genero igual
     string_buffer = strtok(string_gen, ";.,");
     while(string_buffer != NULL){
-        ids_gen = busca_trie_string(raiz_gen, string_buffer); // Está retornando valores errados
-        if((strcmp(string_buffer, "shounen") == 0) || (strcmp(string_buffer, "seinen") == 0) || (strcmp(string_buffer, "shoujo") == 0)){ // Esses generos dão pontuação maior
+        ids_gen = busca_trie_string(raiz_gen, string_buffer);
+        if((strcmp(string_buffer, str_shounen) == 0) || (strcmp(string_buffer, str_seinen) == 0) || (strcmp(string_buffer, str_shoujo) == 0)){ // Esses generos dão pontuação maior
             for(unsigned int j = 0; j < ids_gen.size(); j++){
                 par_buffer.first = ids_gen[j];
                 par_buffer.second = 6;
@@ -902,12 +597,18 @@ void recomendaAnime(int id, trie_string* raiz_gen, trie_string* raiz_stu){
     Anime buffer_anime;
     int proximidade_buffer = 0;
     buffer_anime.score = 0.0;
+    strcpy(string_stu, buffer_anime_leitura.name);
+    char *string_buffer2 = strtok(string_stu, " :,./");
     for(i = 0; i < vetor_proximidade.size(); i++){
-        if(vetor_proximidade[i].second >= (contador_aux * 3)){
-            if(vetor_proximidade[i].first != buffer_in){
-                if((dados_entrada_anime[vetor_proximidade[i].first].score * vetor_proximidade[i].second) >= (buffer_anime.score * proximidade_buffer)){
-                    buffer_anime = dados_entrada_anime[vetor_proximidade[i].first];
-                    proximidade_buffer = vetor_proximidade[i].second;
+        if(vetor_proximidade[i].second >= (contador_aux * 3)){ // Se é similar
+            if(vetor_proximidade[i].first != buffer_in){ // Se não é o mesmo registro
+                if((dados_entrada_anime[vetor_proximidade[i].first].score * vetor_proximidade[i].second) >= (buffer_anime.score * proximidade_buffer)){ // Pega o com maior similaridade*nota
+                    strcpy(string_gen, dados_entrada_anime[vetor_proximidade[i].first].name);
+                    string_buffer = strtok(string_gen, " :,./");
+                    if(strcmp(string_buffer, string_buffer2) != 0){ // Se não tiver mesma primeira palavra (evitar pegar novas temporadas do mesmo registro)
+                        buffer_anime = dados_entrada_anime[vetor_proximidade[i].first];
+                        proximidade_buffer = vetor_proximidade[i].second;
+                    }
                 }
             }
         }

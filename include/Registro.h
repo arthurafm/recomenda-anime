@@ -53,29 +53,4 @@ class Anime{
     private:
 };
 
-// Registro de manga
-class Manga{
-    public:
-
-        Manga(std::string linha);
-        Manga();
-        ~Manga();
-
-        void printaManga();
-
-        char title[100];
-        int id;
-        char type[100];
-        int chapters;
-        int volumes;
-        char status[100];
-        char genres[100];
-        float score;
-        int ranked;
-        char author[100];
-        char serializations[100];
-
-    private:
-};
-
 #endif // REGISTRO_H
