@@ -90,19 +90,7 @@ int busca_trie(NodoTrie* raiz, char* name);
 
 std::vector<int> busca_trie_string(trie_string* raiz, char* name);
 
-int checa_divergencia(NodoTrie* raiz, char* name);
-
-char* busca_maior_prefixo(NodoTrie* raiz, char* name);
-
 int nodo_eh_folha(NodoTrie* raiz, char* name);
-
-NodoTrie* delete_trie(NodoTrie* raiz, char* name);
-
-void print_trie(NodoTrie* raiz);
-
-void print_trie_string(trie_string* raiz);
-
-void print_nome(NodoTrie* raiz, char* name);
 
 void pega_ids(NodoTrie* raiz, std::vector <int> &ids);
 
