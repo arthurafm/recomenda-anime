@@ -13,7 +13,7 @@ O programa contém as seguintes funções: recomendaAnime, buscaAnime, excluiAni
 
 Program made for database manipulation in C++. Made by Arthur Alves in collab with João Pedro Braun during UFRGS' 2022/1 period for the final Classification and Search of Data assignment, under professor Renan Maffei's tutelage.
 
-The programa uses CSVs taken from MyAnimeList site for the creation of a database stored in binary files, in a way data persists.
+The program uses CSVs taken from MyAnimeList site for the creation of a database stored in binary files, in a way data persists.
 B+ trees are used to access integer keys and TRIE trees are used to access string keys. There is also inverted files used for data access through secondary attributes.
 
 The program contains the following funcions: recommendAnime, searchAnime, deleteAnime, sortAnime, sortAnimeInverse, searchAnimePrefix, searchAnimeGenre, searchAnimeStudios, searchAnimeGenreLicensor and searchAnimeTwoStudios.
